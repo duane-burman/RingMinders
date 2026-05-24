@@ -5,6 +5,11 @@ export default {
     './index.html',
     './src/**/*.{ts,tsx}',
   ],
+  safelist: [
+    'translate-x-0',
+    '-translate-x-full',
+    'lg:translate-x-0',
+  ],
   theme: {
   	extend: {
   		borderRadius: {
