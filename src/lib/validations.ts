@@ -60,17 +60,37 @@ export const reminderSchema = z.object({
     .optional()
     .or(z.literal('')),
   is_repeating: z.boolean(),
+  repeat_type: z.enum(['daily', 'weekly', 'monthly_date', 'monthly_day']).optional(),
   repeat_interval_days: z.coerce.number().int().min(1).max(365).optional(),
+  repeat_days_of_week: z.array(z.number().int().min(0).max(6)).optional(),
+  repeat_day_of_month: z.coerce.number().int().min(1).max(28).optional(),
+  repeat_week_of_month: z.coerce.number().int().min(1).max(4).optional(),
+  repeat_day_of_week: z.coerce.number().int().min(0).max(6).optional(),
   repeat_end_date: z.string().optional(),
-  notes: z.string().optional(),
 })
 .refine(
   (data) => data.callback_type !== 'custom' || (data.custom_callback && data.custom_callback.length === 10),
   { message: 'Enter a valid 10-digit phone number', path: ['custom_callback'] }
 )
 .refine(
-  (data) => !data.is_repeating || (data.repeat_interval_days && data.repeat_interval_days > 0),
-  { message: 'Repeat interval is required when repeating is enabled', path: ['repeat_interval_days'] }
+  (data) => !data.is_repeating || !!data.repeat_type,
+  { message: 'Please select a repeat type', path: ['repeat_type'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'daily' || (data.repeat_interval_days && data.repeat_interval_days > 0),
+  { message: 'Enter the number of days between reminders', path: ['repeat_interval_days'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'weekly' || (data.repeat_days_of_week && data.repeat_days_of_week.length > 0),
+  { message: 'Select at least one day of the week', path: ['repeat_days_of_week'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'monthly_date' || (data.repeat_day_of_month && data.repeat_day_of_month >= 1),
+  { message: 'Select a day of the month', path: ['repeat_day_of_month'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'monthly_day' || (data.repeat_week_of_month && data.repeat_day_of_week !== undefined),
+  { message: 'Select a week and day', path: ['repeat_week_of_month'] }
 )
 
 export type ReminderFormData = z.infer<typeof reminderSchema>

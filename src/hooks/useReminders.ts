@@ -44,8 +44,13 @@ export function useCreateReminder() {
       recording_url: string
       recording_duration?: number
       is_repeating: boolean
-      repeat_interval_days?: number
-      repeat_end_date?: string
+      repeat_type?: string
+      repeat_interval_days?: number | null
+      repeat_days_of_week?: number[] | null
+      repeat_day_of_month?: number | null
+      repeat_week_of_month?: number | null
+      repeat_day_of_week?: number | null
+      repeat_end_date?: string | null
     }) => {
       const { error } = await supabase.from('reminders').insert({
         ...data,

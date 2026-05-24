@@ -9,7 +9,7 @@ import { useUsers } from '@/hooks/useUsers'
 import type { User } from '@/hooks/useUsers'
 import { useCreateReminder } from '@/hooks/useReminders'
 import { supabase } from '@/lib/supabase'
-import { formatPhone } from '@/lib/utils'
+import { formatPhone, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -57,6 +57,22 @@ function toUtcIso(dateStr: string, timeStr: string, timezone: string): string {
 
 const today = new Date().toISOString().split('T')[0]
 
+const tomorrow = (() => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+})()
+
+function ordinal(n: number): string {
+  if (n >= 11 && n <= 13) return `${n}th`
+  switch (n % 10) {
+    case 1: return `${n}st`
+    case 2: return `${n}nd`
+    case 3: return `${n}rd`
+    default: return `${n}th`
+  }
+}
+
 export function ReminderNewPage() {
   const navigate = useNavigate()
 
@@ -83,6 +99,7 @@ export function ReminderNewPage() {
       callback_type: 'primary',
       is_repeating: false,
       custom_callback: '',
+      repeat_days_of_week: [],
     },
   })
 
@@ -98,6 +115,8 @@ export function ReminderNewPage() {
   const watchedUserId = watch('user_id')
   const watchedCallbackType = watch('callback_type')
   const watchedIsRepeating = watch('is_repeating')
+  const watchedRepeatType = watch('repeat_type')
+  const watchedDaysOfWeek = watch('repeat_days_of_week') ?? []
 
   // Update selectedUser when user changes
   useEffect(() => {
@@ -214,8 +233,13 @@ export function ReminderNewPage() {
         callback_number: callbackNumber,
         recording_url: recordingUrl,
         is_repeating: data.is_repeating,
-        repeat_interval_days: data.is_repeating ? data.repeat_interval_days : undefined,
-        repeat_end_date: data.is_repeating && data.repeat_end_date ? data.repeat_end_date : undefined,
+        repeat_type: data.repeat_type,
+        repeat_interval_days: data.repeat_type === 'daily' ? data.repeat_interval_days : null,
+        repeat_days_of_week: data.repeat_type === 'weekly' ? data.repeat_days_of_week : null,
+        repeat_day_of_month: data.repeat_type === 'monthly_date' ? data.repeat_day_of_month : null,
+        repeat_week_of_month: data.repeat_type === 'monthly_day' ? data.repeat_week_of_month : null,
+        repeat_day_of_week: data.repeat_type === 'monthly_day' ? data.repeat_day_of_week : null,
+        repeat_end_date: data.repeat_end_date || null,
       })
 
       navigate('/reminders')
@@ -454,56 +478,221 @@ export function ReminderNewPage() {
 
             {/* Repeating */}
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Controller
-                  name="is_repeating"
-                  control={control}
-                  render={({ field }) => (
+              <Controller
+                name="is_repeating"
+                control={form.control}
+                render={({ field }) => (
+                  <div className="flex items-center gap-3">
                     <Switch
-                      id="is_repeating"
                       checked={field.value}
                       onCheckedChange={(checked) => {
                         field.onChange(checked)
                         if (!checked) {
+                          form.setValue('repeat_type', undefined)
                           form.setValue('repeat_interval_days', undefined)
+                          form.setValue('repeat_days_of_week', [])
+                          form.setValue('repeat_day_of_month', undefined)
+                          form.setValue('repeat_week_of_month', undefined)
+                          form.setValue('repeat_day_of_week', undefined)
                           form.setValue('repeat_end_date', '')
                         }
                       }}
                     />
-                  )}
-                />
-                <Label htmlFor="is_repeating" className="cursor-pointer">
-                  Repeating reminder
-                </Label>
-              </div>
+                    <Label>Repeating reminder</Label>
+                  </div>
+                )}
+              />
 
               {watchedIsRepeating && (
-                <div className="pl-2 space-y-4 border-l-2 border-border ml-2">
-                  <div className="space-y-1 pl-4">
-                    <Label htmlFor="repeat_interval_days">Repeat every (days)</Label>
-                    <Input
-                      id="repeat_interval_days"
-                      type="number"
-                      min={1}
-                      max={365}
-                      className="w-28"
-                      {...register('repeat_interval_days')}
+                <div className="ml-2 pl-4 space-y-4 border-l-2 border-border">
+                  {/* Repeat type */}
+                  <div className="space-y-1">
+                    <Label>Repeat type</Label>
+                    <Controller
+                      name="repeat_type"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          key={field.value}
+                          value={field.value ?? ''}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select repeat type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly_date">Monthly — specific date</SelectItem>
+                            <SelectItem value="monthly_day">Monthly — day pattern</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
-                    {errors.repeat_interval_days && (
-                      <p className="text-destructive text-sm">
-                        {errors.repeat_interval_days.message}
-                      </p>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(errors as any).repeat_type && (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      <p className="text-destructive text-sm">{(errors as any).repeat_type.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-1 pl-4">
+                  {/* Daily: interval */}
+                  {watchedRepeatType === 'daily' && (
+                    <div className="space-y-1">
+                      <Label htmlFor="repeat_interval_days">Repeat every (days)</Label>
+                      <Input
+                        id="repeat_interval_days"
+                        type="number"
+                        min={1}
+                        max={365}
+                        placeholder="e.g. 7 for weekly"
+                        className="w-40"
+                        {...register('repeat_interval_days')}
+                      />
+                      {errors.repeat_interval_days && (
+                        <p className="text-destructive text-sm">{errors.repeat_interval_days.message}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Weekly: day pills */}
+                  {watchedRepeatType === 'weekly' && (
+                    <div className="space-y-2">
+                      <Label>Repeat on</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const).map((label, i) => {
+                          const active = watchedDaysOfWeek.includes(i)
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                setValue(
+                                  'repeat_days_of_week',
+                                  active
+                                    ? watchedDaysOfWeek.filter((d) => d !== i)
+                                    : [...watchedDaysOfWeek, i]
+                                )
+                              }}
+                              className={cn(
+                                'px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                                active
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-surface border-border text-text hover:bg-muted'
+                              )}
+                            >
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(errors as any).repeat_days_of_week && (
+                        <p className="text-destructive text-sm">Select at least one day of the week</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Monthly — specific date */}
+                  {watchedRepeatType === 'monthly_date' && (
+                    <div className="space-y-1">
+                      <Label>Day of month</Label>
+                      <Controller
+                        name="repeat_day_of_month"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value != null ? String(field.value) : ''}
+                            onValueChange={(v) => field.onChange(Number(v))}
+                          >
+                            <SelectTrigger className="w-36">
+                              <SelectValue placeholder="Select day" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                                <SelectItem key={d} value={String(d)}>
+                                  {ordinal(d)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(errors as any).repeat_day_of_month && (
+                        <p className="text-destructive text-sm">Select a day of the month</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Monthly — day pattern */}
+                  {watchedRepeatType === 'monthly_day' && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label>Week</Label>
+                        <Controller
+                          name="repeat_week_of_month"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value != null ? String(field.value) : ''}
+                              onValueChange={(v) => field.onChange(Number(v))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select week" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">First</SelectItem>
+                                <SelectItem value="2">Second</SelectItem>
+                                <SelectItem value="3">Third</SelectItem>
+                                <SelectItem value="4">Fourth</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(errors as any).repeat_week_of_month && (
+                          <p className="text-destructive text-sm">Select a week and day</p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Day</Label>
+                        <Controller
+                          name="repeat_day_of_week"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value != null ? String(field.value) : ''}
+                              onValueChange={(v) => field.onChange(Number(v))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select day" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="0">Sunday</SelectItem>
+                                <SelectItem value="1">Monday</SelectItem>
+                                <SelectItem value="2">Tuesday</SelectItem>
+                                <SelectItem value="3">Wednesday</SelectItem>
+                                <SelectItem value="4">Thursday</SelectItem>
+                                <SelectItem value="5">Friday</SelectItem>
+                                <SelectItem value="6">Saturday</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* End date — always visible when repeating */}
+                  <div className="space-y-1">
                     <Label htmlFor="repeat_end_date">
                       End date <span className="text-text-muted font-normal">(optional)</span>
                     </Label>
                     <input
                       id="repeat_end_date"
                       type="date"
-                      min={today}
+                      min={tomorrow}
                       className={inputClass + ' w-48'}
                       {...register('repeat_end_date')}
                     />
