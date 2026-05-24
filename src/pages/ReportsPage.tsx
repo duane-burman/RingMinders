@@ -125,6 +125,7 @@ function RangeSelect({
 export function ReportsPage() {
   const [searchParams] = useSearchParams()
   const defaultTab = searchParams.get('tab') ?? 'delivery'
+  const [activeTab, setActiveTab] = useState(defaultTab)
   const [deliveryRangeDays, setDeliveryRangeDays] = useState<number>(30)
   const [failureRangeDays, setFailureRangeDays] = useState<number>(30)
 
@@ -151,7 +152,7 @@ export function ReportsPage() {
         <p className="text-text-muted text-sm">Delivery, failure, scheduler, and user activity reports.</p>
       </div>
 
-      <Tabs defaultValue={defaultTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="delivery">Delivery</TabsTrigger>
           <TabsTrigger value="failures">Failures</TabsTrigger>
@@ -210,19 +211,21 @@ export function ReportsPage() {
 
               <div className="bg-surface border border-border rounded-lg p-4 mb-6">
                 <h2 className="font-medium text-text mb-4">Daily Breakdown</h2>
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={deliveryData.daily_breakdown ?? []}>
-                      <CartesianGrid stroke="#E2E6EC" />
-                      <XAxis dataKey="day" tickFormatter={formatDay} />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip labelFormatter={(label) => formatDay(String(label))} />
-                      <Legend />
-                      <Line type="monotone" dataKey="delivered" stroke="#3DBE6E" />
-                      <Line type="monotone" dataKey="voicemail" stroke="#E8A838" />
-                      <Line type="monotone" dataKey="missed" stroke="#E05555" />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="h-[280px] min-w-0">
+                  {activeTab === 'delivery' && (
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                      <LineChart data={deliveryData.daily_breakdown ?? []}>
+                        <CartesianGrid stroke="#E2E6EC" />
+                        <XAxis dataKey="day" tickFormatter={formatDay} />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip labelFormatter={(label) => formatDay(String(label))} />
+                        <Legend />
+                        <Line type="monotone" dataKey="delivered" stroke="#3DBE6E" />
+                        <Line type="monotone" dataKey="voicemail" stroke="#E8A838" />
+                        <Line type="monotone" dataKey="missed" stroke="#E05555" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </div>
 
