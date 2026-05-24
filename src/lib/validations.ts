@@ -137,6 +137,22 @@ export const reminderUpdateSchema = z.object({
   { message: 'Please select a repeat type', path: ['repeat_type'] }
 )
 .refine(
+  (data) => data.repeat_type !== 'daily' || (data.repeat_interval_days && data.repeat_interval_days > 0),
+  { message: 'Enter the number of days between reminders', path: ['repeat_interval_days'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'weekly' || (data.repeat_days_of_week && data.repeat_days_of_week.length > 0),
+  { message: 'Select at least one day of the week', path: ['repeat_days_of_week'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'monthly_date' || (data.repeat_day_of_month && data.repeat_day_of_month >= 1),
+  { message: 'Select a day of the month', path: ['repeat_day_of_month'] }
+)
+.refine(
+  (data) => data.repeat_type !== 'monthly_day' || (data.repeat_week_of_month && data.repeat_day_of_week !== undefined),
+  { message: 'Select a week and day', path: ['repeat_week_of_month'] }
+)
+.refine(
   (data) => {
     if (!data.is_repeating || !data.repeat_end_date || !data.scheduled_date) return true
     return new Date(data.repeat_end_date) > new Date(data.scheduled_date)
