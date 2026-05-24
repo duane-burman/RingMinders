@@ -611,7 +611,6 @@ export function ReminderDetailPage() {
                           control={control}
                           render={({ field }) => (
                             <Select
-                              key={field.value}
                               value={field.value ?? ''}
                               disabled={!isPending}
                               onValueChange={field.onChange}
