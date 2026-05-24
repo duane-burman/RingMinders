@@ -266,7 +266,6 @@ export function ReminderDetailPage() {
   const onSubmit = async (data: ReminderUpdateFormData) => {
     if (!reminder || !userRecord) return
     setSubmitError(null)
-    setSaveSuccess(false)
 
     try {
       // Resolve callback number — DB values are already E.164; only custom input needs conversion
