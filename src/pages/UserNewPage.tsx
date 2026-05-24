@@ -31,11 +31,20 @@ function generatePin(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, '0')
 }
 
+function formatPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+}
+
 export function UserNewPage() {
   const navigate = useNavigate()
   const createUser = useCreateUser()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [generatedPin, setGeneratedPin] = useState<string | null>(null)
+  const [primaryPhoneDisplay, setPrimaryPhoneDisplay] = useState('')
+  const [secondaryPhoneDisplay, setSecondaryPhoneDisplay] = useState('')
 
   const {
     register,
@@ -77,6 +86,10 @@ export function UserNewPage() {
     }
   }
 
+  // Separate register calls for phone fields so we can override onChange
+  const { onChange: _primaryOnChange, ...primaryPhoneReg } = register('primary_phone')
+  const { onChange: _secondaryOnChange, ...secondaryPhoneReg } = register('secondary_phone')
+
   return (
     <div>
       {/* Header */}
@@ -112,8 +125,14 @@ export function UserNewPage() {
               <Label htmlFor="primary_phone">Primary Phone</Label>
               <Input
                 id="primary_phone"
-                placeholder="10 digits, no dashes"
-                {...register('primary_phone')}
+                placeholder="(555) 555-5555"
+                value={primaryPhoneDisplay}
+                {...primaryPhoneReg}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                  setPrimaryPhoneDisplay(formatPhoneInput(e.target.value))
+                  setValue('primary_phone', digits, { shouldValidate: true })
+                }}
               />
               {errors.primary_phone && (
                 <p className="text-destructive text-sm">{errors.primary_phone.message}</p>
@@ -127,8 +146,14 @@ export function UserNewPage() {
               </Label>
               <Input
                 id="secondary_phone"
-                placeholder="10 digits, no dashes"
-                {...register('secondary_phone')}
+                placeholder="(555) 555-5555"
+                value={secondaryPhoneDisplay}
+                {...secondaryPhoneReg}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                  setSecondaryPhoneDisplay(formatPhoneInput(e.target.value))
+                  setValue('secondary_phone', digits, { shouldValidate: true })
+                }}
               />
               {errors.secondary_phone && (
                 <p className="text-destructive text-sm">{errors.secondary_phone.message}</p>
@@ -220,7 +245,9 @@ export function UserNewPage() {
 
             {/* Notes */}
             <div className="space-y-1">
-              <Label htmlFor="notes">Notes <span className="text-text-muted font-normal">(optional)</span></Label>
+              <Label htmlFor="notes">
+                Notes <span className="text-text-muted font-normal">(optional)</span>
+              </Label>
               <textarea
                 id="notes"
                 rows={3}
