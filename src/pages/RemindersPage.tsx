@@ -105,7 +105,6 @@ export function RemindersPage() {
       {/* Filter bar */}
       <div className="flex items-center gap-3 mb-4">
         <Select
-          key={statusFilter}
           value={statusFilter}
           onValueChange={(val) => setStatusFilter(val === 'all' ? '' : val)}
         >
@@ -123,7 +122,6 @@ export function RemindersPage() {
         </Select>
 
         <Select
-          key={sourceFilter}
           value={sourceFilter}
           onValueChange={(val) => setSourceFilter(val === 'all' ? '' : val)}
         >
@@ -138,7 +136,6 @@ export function RemindersPage() {
         </Select>
 
         <Select
-          key={userFilter}
           value={userFilter}
           onValueChange={(val) => setUserFilter(val === 'all' ? '' : val)}
         >
