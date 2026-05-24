@@ -1,7 +1,7 @@
 // New user — form to create a new user account
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { userSchema } from '@/lib/validations'
 import type { UserFormData } from '@/lib/validations'
@@ -43,24 +43,21 @@ export function UserNewPage() {
   const createUser = useCreateUser()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [generatedPin, setGeneratedPin] = useState<string | null>(null)
-  const [primaryPhoneDisplay, setPrimaryPhoneDisplay] = useState('')
-  const [secondaryPhoneDisplay, setSecondaryPhoneDisplay] = useState('')
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
+  const form = useForm<UserFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<UserFormData>({
     resolver: zodResolver(userSchema) as any,
+    mode: 'onSubmit',
     defaultValues: {
       timezone: 'America/New_York',
       retry_max_attempts: 3,
       retry_interval_minutes: 15,
+      primary_phone: '',
+      secondary_phone: '',
     },
   })
+
+  const { register, handleSubmit, setValue, watch, control, formState: { errors, isSubmitting } } = form
 
   const watchedTimezone = watch('timezone')
 
@@ -85,10 +82,6 @@ export function UserNewPage() {
       setSubmitError((err as Error).message)
     }
   }
-
-  // Separate register calls for phone fields so we can override onChange
-  const { onChange: _primaryOnChange, ...primaryPhoneReg } = register('primary_phone')
-  const { onChange: _secondaryOnChange, ...secondaryPhoneReg } = register('secondary_phone')
 
   return (
     <div>
@@ -123,16 +116,21 @@ export function UserNewPage() {
             {/* Primary Phone */}
             <div className="space-y-1">
               <Label htmlFor="primary_phone">Primary Phone</Label>
-              <Input
-                id="primary_phone"
-                placeholder="(555) 555-5555"
-                value={primaryPhoneDisplay}
-                {...primaryPhoneReg}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
-                  setPrimaryPhoneDisplay(formatPhoneInput(e.target.value))
-                  setValue('primary_phone', digits, { shouldValidate: true })
-                }}
+              <Controller
+                name="primary_phone"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="primary_phone"
+                    placeholder="(XXX) XXX-XXXX"
+                    value={formatPhoneInput(field.value || '')}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      field.onChange(digits)
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
               {errors.primary_phone && (
                 <p className="text-destructive text-sm">{errors.primary_phone.message}</p>
@@ -144,16 +142,21 @@ export function UserNewPage() {
               <Label htmlFor="secondary_phone">
                 Secondary Phone <span className="text-text-muted font-normal">(optional)</span>
               </Label>
-              <Input
-                id="secondary_phone"
-                placeholder="(555) 555-5555"
-                value={secondaryPhoneDisplay}
-                {...secondaryPhoneReg}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
-                  setSecondaryPhoneDisplay(formatPhoneInput(e.target.value))
-                  setValue('secondary_phone', digits, { shouldValidate: true })
-                }}
+              <Controller
+                name="secondary_phone"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="secondary_phone"
+                    placeholder="(XXX) XXX-XXXX"
+                    value={formatPhoneInput(field.value || '')}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      field.onChange(digits)
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                )}
               />
               {errors.secondary_phone && (
                 <p className="text-destructive text-sm">{errors.secondary_phone.message}</p>
