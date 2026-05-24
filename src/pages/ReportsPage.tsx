@@ -159,7 +159,7 @@ export function ReportsPage() {
     resizeObserver.observe(element)
 
     return () => resizeObserver.disconnect()
-  }, [activeTab])
+  }, [activeTab, deliveryData])
 
   return (
     <div>
