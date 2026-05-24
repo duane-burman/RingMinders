@@ -94,3 +94,32 @@ export const reminderSchema = z.object({
 )
 
 export type ReminderFormData = z.infer<typeof reminderSchema>
+
+export const reminderUpdateSchema = z.object({
+  scheduled_date: z.string().min(1, 'Date is required'),
+  scheduled_time: z.string().min(1, 'Time is required'),
+  callback_type: z.enum(['primary', 'secondary', 'custom']),
+  custom_callback: z
+    .string()
+    .regex(/^\d{10}$/, 'Enter a valid 10-digit phone number')
+    .optional()
+    .or(z.literal('')),
+  is_repeating: z.boolean(),
+  repeat_type: z.enum(['daily', 'weekly', 'monthly_date', 'monthly_day']).optional(),
+  repeat_interval_days: z.coerce.number().int().min(1).max(365).optional(),
+  repeat_days_of_week: z.array(z.number().int().min(0).max(6)).optional(),
+  repeat_day_of_month: z.coerce.number().int().min(1).max(28).optional(),
+  repeat_week_of_month: z.coerce.number().int().min(1).max(4).optional(),
+  repeat_day_of_week: z.coerce.number().int().min(0).max(6).optional(),
+  repeat_end_date: z.string().optional(),
+})
+.refine(
+  (data) => data.callback_type !== 'custom' || (data.custom_callback && data.custom_callback.length === 10),
+  { message: 'Enter a valid 10-digit phone number', path: ['custom_callback'] }
+)
+.refine(
+  (data) => !data.is_repeating || !!data.repeat_type,
+  { message: 'Please select a repeat type', path: ['repeat_type'] }
+)
+
+export type ReminderUpdateFormData = z.infer<typeof reminderUpdateSchema>

@@ -76,3 +76,35 @@ export function useCancelReminder() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] })
   })
 }
+
+export function useReminder(id: string) {
+  return useQuery({
+    queryKey: ['reminders', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reminders')
+        .select('*, users(name, timezone, primary_phone, secondary_phone)')
+        .eq('id', id)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export function useUpdateReminder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: ReminderUpdate & { id: string }) => {
+      const { error } = await supabase
+        .from('reminders')
+        .update(updates)
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+      queryClient.invalidateQueries({ queryKey: ['reminders', variables.id] })
+    }
+  })
+}

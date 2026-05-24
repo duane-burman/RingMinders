@@ -1,6 +1,6 @@
 // Create a new reminder on behalf of a user
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { reminderSchema } from '@/lib/validations'
@@ -75,6 +75,12 @@ function ordinal(n: number): string {
 
 export function ReminderNewPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  // Pre-population from "Create Similar" flow
+  const prefillUserId = searchParams.get('user_id') ?? undefined
+  const prefillRecordingUrl = searchParams.get('recording_url') ?? undefined
+  const prefillCallbackNumber = searchParams.get('callback_number') ?? undefined
 
   // Audio state
   const [audioBase64, setAudioBase64] = useState<string | null>(null)
@@ -96,6 +102,7 @@ export function ReminderNewPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(reminderSchema) as any,
     defaultValues: {
+      user_id: prefillUserId ?? '',
       callback_type: 'primary',
       is_repeating: false,
       custom_callback: '',
@@ -123,9 +130,28 @@ export function ReminderNewPage() {
     if (watchedUserId && users) {
       const user = users.find((u) => u.id === watchedUserId) ?? null
       setSelectedUser(user)
-      setValue('callback_type', 'primary')
+      // Only reset to primary if not pre-filling a specific callback number
+      if (!prefillCallbackNumber) {
+        setValue('callback_type', 'primary')
+      }
     }
-  }, [watchedUserId, users, setValue])
+  }, [watchedUserId, users, setValue, prefillCallbackNumber])
+
+  // Pre-populate callback type from prefillCallbackNumber once user is known
+  const prefillApplied = useRef(false)
+  useEffect(() => {
+    if (!selectedUser || !prefillCallbackNumber || prefillApplied.current) return
+    prefillApplied.current = true
+    const stripped = prefillCallbackNumber.replace(/^\+1/, '')
+    if (stripped === selectedUser.primary_phone) {
+      setValue('callback_type', 'primary')
+    } else if (selectedUser.secondary_phone && stripped === selectedUser.secondary_phone) {
+      setValue('callback_type', 'secondary')
+    } else {
+      setValue('callback_type', 'custom')
+      setValue('custom_callback', stripped)
+    }
+  }, [selectedUser, prefillCallbackNumber, setValue])
 
   // Create blob URL for audio playback, revoke on change
   useEffect(() => {
@@ -194,7 +220,7 @@ export function ReminderNewPage() {
   const onSubmit = async (data: ReminderFormData) => {
     setSubmitError(null)
 
-    if (!audioBase64) {
+    if (!audioBase64 && !prefillRecordingUrl) {
       setSubmitError('Please provide a voice message before submitting.')
       return
     }
@@ -204,14 +230,19 @@ export function ReminderNewPage() {
     }
 
     try {
-      // 1. Upload audio to Storage via Edge Function
-      const { data: fnData, error: fnError } = await supabase.functions.invoke(
-        'admin-upload-audio',
-        { body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName } }
-      )
-      if (fnError) throw new Error(fnError.message)
-      if (fnData?.error) throw new Error(fnData.error)
-      const recordingUrl: string = fnData.url
+      // 1. Upload audio to Storage via Edge Function (skip if reusing pre-filled recording)
+      let recordingUrl: string
+      if (audioBase64) {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke(
+          'admin-upload-audio',
+          { body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName } }
+        )
+        if (fnError) throw new Error(fnError.message)
+        if (fnData?.error) throw new Error(fnData.error)
+        recordingUrl = fnData.url
+      } else {
+        recordingUrl = prefillRecordingUrl!
+      }
 
       // 2. Resolve callback number
       let callbackNumber: string
@@ -408,6 +439,24 @@ export function ReminderNewPage() {
             {/* Voice Message */}
             <div className="space-y-2">
               <Label>Voice Message</Label>
+
+              {/* Pre-filled recording from "Create Similar" */}
+              {prefillRecordingUrl && !audioUrl && (
+                <div className="space-y-1">
+                  <p className="text-text-muted text-xs">Pre-filled recording (replace below if needed):</p>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={prefillRecordingUrl} className="w-full h-10" />
+                </div>
+              )}
+
+              {/* New recording playback */}
+              {audioUrl && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={audioUrl} className="w-full h-10" />
+                </div>
+              )}
+
               <Tabs defaultValue="upload">
                 <TabsList>
                   <TabsTrigger value="upload">Upload File</TabsTrigger>
@@ -467,13 +516,6 @@ export function ReminderNewPage() {
                 </TabsContent>
               </Tabs>
 
-              {/* Playback — shown regardless of which tab captured the audio */}
-              {audioUrl && (
-                <div className="mt-3">
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                  <audio controls src={audioUrl} className="w-full h-10" />
-                </div>
-              )}
             </div>
 
             {/* Repeating */}
