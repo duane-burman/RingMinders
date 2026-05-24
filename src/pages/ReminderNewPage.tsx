@@ -263,9 +263,9 @@ export function ReminderNewPage() {
                       <SelectValue placeholder="Select a user" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users?.map((u) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name}
+                      {users?.filter((u) => !!u.id).map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -462,7 +462,13 @@ export function ReminderNewPage() {
                     <Switch
                       id="is_repeating"
                       checked={field.value}
-                      onCheckedChange={field.onChange}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked)
+                        if (!checked) {
+                          form.setValue('repeat_interval_days', undefined)
+                          form.setValue('repeat_end_date', '')
+                        }
+                      }}
                     />
                   )}
                 />
