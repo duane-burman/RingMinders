@@ -1,5 +1,5 @@
 // Reports — delivery, failure, scheduler, and user activity reports
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   LineChart,
@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from 'recharts'
 import {
   useDeliveryReport,
@@ -128,6 +127,8 @@ export function ReportsPage() {
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [deliveryRangeDays, setDeliveryRangeDays] = useState<number>(30)
   const [failureRangeDays, setFailureRangeDays] = useState<number>(30)
+  const chartContainerRef = useRef<HTMLDivElement | null>(null)
+  const [chartWidth, setChartWidth] = useState(0)
 
   const deliveryReport = useDeliveryReport(deliveryRangeDays)
   const failureReport = useFailureReport(failureRangeDays)
@@ -144,6 +145,21 @@ export function ReportsPage() {
     : 0
   const status = schedulerStatus(schedulerData?.last_run ?? null)
   const lastRunAgo = formatAgo(secondsAgo(schedulerData?.last_run ?? null))
+
+  useEffect(() => {
+    if (activeTab !== 'delivery' || !chartContainerRef.current) {
+      return
+    }
+
+    const element = chartContainerRef.current
+    const updateWidth = () => setChartWidth(Math.floor(element.getBoundingClientRect().width))
+    updateWidth()
+
+    const resizeObserver = new ResizeObserver(updateWidth)
+    resizeObserver.observe(element)
+
+    return () => resizeObserver.disconnect()
+  }, [activeTab])
 
   return (
     <div>
@@ -211,20 +227,22 @@ export function ReportsPage() {
 
               <div className="bg-surface border border-border rounded-lg p-4 mb-6">
                 <h2 className="font-medium text-text mb-4">Daily Breakdown</h2>
-                <div className="h-[280px] min-w-0">
-                  {activeTab === 'delivery' && (
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                      <LineChart data={deliveryData.daily_breakdown ?? []}>
-                        <CartesianGrid stroke="#E2E6EC" />
-                        <XAxis dataKey="day" tickFormatter={formatDay} />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip labelFormatter={(label) => formatDay(String(label))} />
-                        <Legend />
-                        <Line type="monotone" dataKey="delivered" stroke="#3DBE6E" />
-                        <Line type="monotone" dataKey="voicemail" stroke="#E8A838" />
-                        <Line type="monotone" dataKey="missed" stroke="#E05555" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                <div ref={chartContainerRef} className="h-[280px] min-w-0 overflow-x-auto">
+                  {activeTab === 'delivery' && chartWidth > 0 && (
+                    <LineChart
+                      data={deliveryData.daily_breakdown ?? []}
+                      width={Math.max(chartWidth, 320)}
+                      height={280}
+                    >
+                      <CartesianGrid stroke="#E2E6EC" />
+                      <XAxis dataKey="day" tickFormatter={formatDay} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip labelFormatter={(label) => formatDay(String(label))} />
+                      <Legend />
+                      <Line type="monotone" dataKey="delivered" stroke="#3DBE6E" />
+                      <Line type="monotone" dataKey="voicemail" stroke="#E8A838" />
+                      <Line type="monotone" dataKey="missed" stroke="#E05555" />
+                    </LineChart>
                   )}
                 </div>
               </div>
