@@ -92,6 +92,13 @@ export const reminderSchema = z.object({
   (data) => data.repeat_type !== 'monthly_day' || (data.repeat_week_of_month && data.repeat_day_of_week !== undefined),
   { message: 'Select a week and day', path: ['repeat_week_of_month'] }
 )
+.refine(
+  (data) => {
+    if (!data.is_repeating || !data.repeat_end_date || !data.scheduled_date) return true
+    return new Date(data.repeat_end_date) > new Date(data.scheduled_date)
+  },
+  { message: 'End date must be after the scheduled date', path: ['repeat_end_date'] }
+)
 
 export type ReminderFormData = z.infer<typeof reminderSchema>
 
@@ -120,6 +127,13 @@ export const reminderUpdateSchema = z.object({
 .refine(
   (data) => !data.is_repeating || !!data.repeat_type,
   { message: 'Please select a repeat type', path: ['repeat_type'] }
+)
+.refine(
+  (data) => {
+    if (!data.is_repeating || !data.repeat_end_date || !data.scheduled_date) return true
+    return new Date(data.repeat_end_date) > new Date(data.scheduled_date)
+  },
+  { message: 'End date must be after the scheduled date', path: ['repeat_end_date'] }
 )
 
 export type ReminderUpdateFormData = z.infer<typeof reminderUpdateSchema>

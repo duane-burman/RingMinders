@@ -83,12 +83,6 @@ function toUtcIso(dateStr: string, timeStr: string, timezone: string): string {
   return new Date(naiveUtc.getTime() + correction).toISOString()
 }
 
-const tomorrow = (() => {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
-})()
-
 function ordinal(n: number): string {
   if (n >= 11 && n <= 13) return `${n}th`
   switch (n % 10) {
@@ -164,6 +158,7 @@ export function ReminderDetailPage() {
   const watchedIsRepeating = watch('is_repeating')
   const watchedRepeatType = watch('repeat_type')
   const watchedDaysOfWeek = watch('repeat_days_of_week') ?? []
+  const watchedScheduledDate = watch('scheduled_date')
 
   // Populate form from fetched reminder (once only)
   useEffect(() => {
@@ -796,7 +791,7 @@ export function ReminderDetailPage() {
                         <input
                           id="repeat_end_date"
                           type="date"
-                          min={tomorrow}
+                          min={watchedScheduledDate || new Date().toISOString().split('T')[0]}
                           disabled={!isPending}
                           className={inputClass + ' w-48'}
                           {...register('repeat_end_date')}
