@@ -2,7 +2,7 @@
 // Also used during user creation to hash the initial PIN
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
+import bcrypt from 'https://esm.sh/bcryptjs@2.4.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +24,7 @@ serve(async (req) => {
       })
     }
 
-    const pin_hash = await bcrypt.hash(pin)
+    const pin_hash = bcrypt.hashSync(pin, 10)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
