@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReminders, useCancelReminder } from '@/hooks/useReminders'
+import type { Reminder } from '@/hooks/useReminders'
 import { useUsers } from '@/hooks/useUsers'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { formatDateTime, formatPhone } from '@/lib/utils'
@@ -32,6 +33,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+
+function formatRepeat(reminder: Reminder): string {
+  if (!reminder.is_repeating || !reminder.repeat_type) return '—'
+
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const weeks = ['', 'First', 'Second', 'Third', 'Fourth']
+  const ordinal = (n: number) => {
+    const s = ['th', 'st', 'nd', 'rd']
+    const v = n % 100
+    return n + (s[(v - 20) % 10] || s[v] || s[0])
+  }
+
+  switch (reminder.repeat_type) {
+    case 'daily':
+      return `Every ${reminder.repeat_interval_days} day${reminder.repeat_interval_days === 1 ? '' : 's'}`
+    case 'weekly': {
+      const selected = (reminder.repeat_days_of_week ?? [])
+        .sort((a: number, b: number) => a - b)
+        .map((d: number) => days[d])
+        .join(', ')
+      return `Weekly — ${selected}`
+    }
+    case 'monthly_date':
+      return `Monthly — ${ordinal(reminder.repeat_day_of_month!)}`
+    case 'monthly_day':
+      return `Monthly — ${weeks[reminder.repeat_week_of_month!]} ${days[reminder.repeat_day_of_week!]}`
+    default:
+      return '—'
+  }
+}
 
 export function RemindersPage() {
   const navigate = useNavigate()
@@ -142,6 +173,7 @@ export function RemindersPage() {
                 <TableHead>Delivery Method</TableHead>
                 <TableHead>Attempts</TableHead>
                 <TableHead>Source</TableHead>
+                <TableHead>Repeat</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -185,6 +217,7 @@ export function RemindersPage() {
                     <TableCell className="text-sm text-text">
                       {reminder.source === 'ivr' ? 'IVR' : 'Admin'}
                     </TableCell>
+                    <TableCell className="text-text-muted text-sm">{formatRepeat(reminder)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
