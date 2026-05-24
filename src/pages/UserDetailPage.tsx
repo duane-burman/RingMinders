@@ -75,9 +75,7 @@ export function UserDetailPage() {
     mode: 'onSubmit',
   })
 
-  const { register, handleSubmit, setValue, watch, control, reset, formState: { errors, isSubmitting } } = form
-
-  const watchedTimezone = watch('timezone')
+  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = form
 
   // Populate form once user data loads
   useEffect(() => {
@@ -239,21 +237,24 @@ export function UserDetailPage() {
                 {/* Timezone */}
                 <div className="space-y-1">
                   <Label htmlFor="timezone">Timezone</Label>
-                  <Select
-                    value={watchedTimezone}
-                    onValueChange={(val) => setValue('timezone', val, { shouldValidate: true })}
-                  >
-                    <SelectTrigger id="timezone">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz} value={tz}>
-                          {tz}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="timezone"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value || ''} onValueChange={field.onChange}>
+                        <SelectTrigger id="timezone">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIMEZONES.map((tz) => (
+                            <SelectItem key={tz} value={tz}>
+                              {tz}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {errors.timezone && (
                     <p className="text-destructive text-sm">{errors.timezone.message}</p>
                   )}

@@ -57,9 +57,7 @@ export function UserNewPage() {
     },
   })
 
-  const { register, handleSubmit, setValue, watch, control, formState: { errors, isSubmitting } } = form
-
-  const watchedTimezone = watch('timezone')
+  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting } } = form
 
   const handleGeneratePin = () => {
     const pin = generatePin()
@@ -194,21 +192,24 @@ export function UserNewPage() {
             {/* Timezone */}
             <div className="space-y-1">
               <Label htmlFor="timezone">Timezone</Label>
-              <Select
-                value={watchedTimezone}
-                onValueChange={(val) => setValue('timezone', val, { shouldValidate: true })}
-              >
-                <SelectTrigger id="timezone">
-                  <SelectValue placeholder="Select timezone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz} value={tz}>
-                      {tz}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="timezone"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || ''} onValueChange={field.onChange}>
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {tz}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.timezone && (
                 <p className="text-destructive text-sm">{errors.timezone.message}</p>
               )}
