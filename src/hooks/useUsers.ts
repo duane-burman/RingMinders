@@ -36,6 +36,72 @@ export function useUpdateUserStatus() {
   })
 }
 
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ['users', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (error) throw error
+      return data
+    }
+  })
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: UserUpdate & { id: string }) => {
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['users', variables.id] })
+    }
+  })
+}
+
+export function useUnlockUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('users')
+        .update({ pin_attempts: 0, locked_until: null })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['users', id] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    }
+  })
+}
+
+export function useResetPin() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const pin = String(Math.floor(1000 + Math.random() * 9000))
+      const { data, error } = await supabase.functions.invoke('admin-reset-pin', {
+        body: { user_id: id, pin }
+      })
+      if (error) throw error
+      return { pin, ...data }
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['users', id] })
+    }
+  })
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({

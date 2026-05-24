@@ -29,3 +29,22 @@ export const userSchema = z.object({
 })
 
 export type UserFormData = z.infer<typeof userSchema>
+
+export const userUpdateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  primary_phone: z
+    .string()
+    .min(1, 'Primary phone is required')
+    .regex(/^\d{10}$/, 'Enter a valid 10-digit phone number'),
+  secondary_phone: z
+    .string()
+    .regex(/^\d{10}$/, 'Enter a valid 10-digit phone number')
+    .optional()
+    .or(z.literal('')),
+  timezone: z.string().min(1, 'Timezone is required'),
+  retry_max_attempts: z.coerce.number().int().min(1).max(10),
+  retry_interval_minutes: z.coerce.number().int().min(5).max(60),
+  notes: z.string().optional(),
+})
+
+export type UserUpdateFormData = z.infer<typeof userUpdateSchema>
