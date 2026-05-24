@@ -228,6 +228,22 @@ The following PostgreSQL functions should be created:
 
 **`cleanup_expired_reminders()`** — Finds reminders with status = `pending` where `scheduled_at` is more than 24 hours in the past and no delivery attempts were made (system was down), sets their status to `expired`.
 
+### 5.8 Settings Table
+
+Single-row table. Always exactly one row with id = 1. Never inserted or deleted after initial seed.
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| id | INTEGER | 1 | Always 1. CHECK constraint enforces single row. |
+| default_timezone | VARCHAR(50) | America/New_York | Default timezone applied to new user accounts |
+| default_retry_max_attempts | INTEGER | 3 | Default max delivery retry attempts for new users |
+| default_retry_interval_minutes | INTEGER | 15 | Default minutes between retries for new users |
+| max_recording_length_seconds | INTEGER | 120 | Maximum voice message recording length |
+| account_lockout_threshold | INTEGER | 5 | Failed PIN attempts before account lockout |
+| account_lockout_duration_minutes | INTEGER | 30 | Minutes an account stays locked after threshold |
+| scheduler_concurrency_limit | INTEGER | 10 | Max simultaneous outbound calls per scheduler run |
+| updated_at | TIMESTAMPTZ | now() | Last modified timestamp |
+
 ---
 
 ## 6. User Account Management
