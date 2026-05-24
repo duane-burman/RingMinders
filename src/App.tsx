@@ -1,6 +1,7 @@
 // Root application component — defines all routes
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 import { ProtectedRoute } from '@/components/shared/ProtectedRoute'
 import { AppLayout } from '@/components/shared/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
@@ -21,6 +22,7 @@ const queryClient = new QueryClient()
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <Toaster richColors position="top-right" />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />

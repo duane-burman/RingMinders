@@ -26,13 +26,28 @@ export function useUpdateUserStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
+      const { error: userError } = await supabase
         .from('users')
         .update({ status })
         .eq('id', id)
-      if (error) throw error
+      if (userError) throw userError
+
+      if (status === 'disabled') {
+        const { error: reminderError } = await supabase
+          .from('reminders')
+          .update({ status: 'cancelled' })
+          .eq('user_id', id)
+          .eq('status', 'pending')
+        if (reminderError) throw reminderError
+      }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    },
+    onError: (error: Error) => {
+      console.error('Status update failed:', error.message)
+    }
   })
 }
 

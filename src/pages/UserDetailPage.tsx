@@ -31,8 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useToast } from '@/hooks/use-toast'
-import { Toaster } from '@/components/ui/toaster'
+import { toast } from 'sonner'
 
 function formatPhoneInput(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 10)
@@ -49,8 +48,6 @@ function toRawDigits(phone: string): string {
 export function UserDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { toast } = useToast()
-
   const { data: user, isLoading, error } = useUser(id!)
   const updateUser = useUpdateUser()
   const updateStatus = useUpdateUserStatus()
@@ -102,26 +99,39 @@ export function UserDetailPage() {
         notes: data.notes || null,
       })
       reset(data)
-      toast({ title: 'User updated successfully' })
+      toast.success('User updated successfully')
     } catch (err) {
       setSubmitError((err as Error).message)
+      toast.error(`Failed to save changes: ${(err as Error).message}`)
     }
   }
 
   const handleStatusChange = async (status: string) => {
-    await updateStatus.mutateAsync({ id: id!, status })
-    toast({ title: `Account ${status}` })
+    try {
+      await updateStatus.mutateAsync({ id: id!, status })
+      toast.success(`Account ${status}`)
+    } catch (err) {
+      toast.error(`Failed to update status: ${(err as Error).message}`)
+    }
   }
 
   const handleUnlock = async () => {
-    await unlockUser.mutateAsync(id!)
-    toast({ title: 'Account unlocked' })
+    try {
+      await unlockUser.mutateAsync(id!)
+      toast.success('Account unlocked')
+    } catch (err) {
+      toast.error(`Failed to unlock account: ${(err as Error).message}`)
+    }
   }
 
   const handleResetPin = async () => {
-    const result = await resetPin.mutateAsync(id!)
-    setNewPin(result.pin)
-    setPinModalOpen(true)
+    try {
+      const result = await resetPin.mutateAsync(id!)
+      setNewPin(result.pin)
+      setPinModalOpen(true)
+    } catch (err) {
+      toast.error(`Failed to reset PIN: ${(err as Error).message}`)
+    }
   }
 
   const isLocked = user?.locked_until
@@ -146,8 +156,6 @@ export function UserDetailPage() {
 
   return (
     <div>
-      <Toaster />
-
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button

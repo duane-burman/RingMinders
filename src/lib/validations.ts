@@ -99,6 +99,14 @@ export const reminderSchema = z.object({
   },
   { message: 'End date must be after the scheduled date', path: ['repeat_end_date'] }
 )
+.refine(
+  (data) => {
+    if (!data.scheduled_date || !data.scheduled_time) return true
+    const scheduled = new Date(`${data.scheduled_date}T${data.scheduled_time}`)
+    return scheduled > new Date()
+  },
+  { message: 'Scheduled date and time must be in the future', path: ['scheduled_time'] }
+)
 
 export type ReminderFormData = z.infer<typeof reminderSchema>
 
@@ -134,6 +142,14 @@ export const reminderUpdateSchema = z.object({
     return new Date(data.repeat_end_date) > new Date(data.scheduled_date)
   },
   { message: 'End date must be after the scheduled date', path: ['repeat_end_date'] }
+)
+.refine(
+  (data) => {
+    if (!data.scheduled_date || !data.scheduled_time) return true
+    const scheduled = new Date(`${data.scheduled_date}T${data.scheduled_time}`)
+    return scheduled > new Date()
+  },
+  { message: 'Scheduled date and time must be in the future', path: ['scheduled_time'] }
 )
 
 export type ReminderUpdateFormData = z.infer<typeof reminderUpdateSchema>

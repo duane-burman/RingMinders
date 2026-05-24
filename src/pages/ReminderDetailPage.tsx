@@ -44,6 +44,14 @@ function formatPhoneInput(value: string): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
+// Convert raw 10-digit input to E.164. Never apply to values already from the database.
+function toE164(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`
+  if (digits.length === 10) return `+1${digits}`
+  return phone // already E.164 or unrecognized — return as-is
+}
+
 // Convert UTC ISO string to local date and time strings in a given timezone
 function utcToLocal(isoStr: string, timezone: string): { date: string; time: string } {
   const date = new Date(isoStr)
@@ -93,15 +101,14 @@ function ordinal(n: number): string {
   }
 }
 
-// Determine callback_type from stored number vs user phones
+// Determine callback_type by comparing E.164 values directly (all three are already E.164 from DB)
 function inferCallbackType(
   callbackNumber: string,
   primaryPhone: string,
   secondaryPhone: string | null
 ): 'primary' | 'secondary' | 'custom' {
-  const stripped = callbackNumber.replace(/^\+1/, '')
-  if (stripped === primaryPhone) return 'primary'
-  if (secondaryPhone && stripped === secondaryPhone) return 'secondary'
+  if (callbackNumber === primaryPhone) return 'primary'
+  if (secondaryPhone && callbackNumber === secondaryPhone) return 'secondary'
   return 'custom'
 }
 
@@ -262,14 +269,14 @@ export function ReminderDetailPage() {
     setSaveSuccess(false)
 
     try {
-      // Resolve callback number
+      // Resolve callback number — DB values are already E.164; only custom input needs conversion
       let callbackNumber: string
       if (data.callback_type === 'primary') {
-        callbackNumber = `+1${userRecord.primary_phone}`
+        callbackNumber = userRecord.primary_phone
       } else if (data.callback_type === 'secondary') {
-        callbackNumber = `+1${userRecord.secondary_phone}`
+        callbackNumber = userRecord.secondary_phone!
       } else {
-        callbackNumber = `+1${data.custom_callback}`
+        callbackNumber = toE164(data.custom_callback!)
       }
 
       // Convert local date+time to UTC
