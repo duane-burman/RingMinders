@@ -85,6 +85,7 @@ export function UsersPage() {
 
       {/* Table */}
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -152,6 +153,7 @@ export function UsersPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   )

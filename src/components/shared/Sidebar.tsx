@@ -1,7 +1,9 @@
 // Fixed sidebar navigation with branding, nav links, and sign out
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { cn } from '@/lib/utils'
 
 const navItems = [
   { label: 'Dashboard', icon: 'ti-layout-dashboard', to: '/dashboard' },
@@ -12,9 +14,20 @@ const navItems = [
   { label: 'Settings', icon: 'ti-settings', to: '/settings' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    onClose()
+  }, [location.pathname, onClose])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -22,12 +35,25 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-48 bg-sidebar-bg flex flex-col">
+    <aside className={cn(
+      'fixed top-0 left-0 h-full w-48 bg-sidebar-bg flex flex-col z-30 transition-transform duration-200',
+      'lg:translate-x-0',
+      isOpen ? 'translate-x-0' : '-translate-x-full'
+    )}>
       {/* Logo */}
       <div className="px-4 py-5 border-b border-sidebar-text/20">
         <div className="text-sidebar-active font-semibold text-sm">RingMinder</div>
         <div className="text-sidebar-text text-xs mt-0.5">It actually calls you back.</div>
       </div>
+
+      {/* Close button — mobile only */}
+      <button
+        className="lg:hidden absolute top-4 right-4 text-sidebar-text hover:text-white"
+        onClick={onClose}
+        aria-label="Close menu"
+      >
+        <i className="ti ti-x text-lg" />
+      </button>
 
       {/* Nav items */}
       <nav className="flex-1 py-3">

@@ -162,7 +162,8 @@ export function RemindersPage() {
           <AlertDescription>{(error as Error).message}</AlertDescription>
         </Alert>
       ) : (
-        <div className="bg-surface border border-border rounded-lg">
+        <div className="bg-surface border border-border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -243,6 +244,7 @@ export function RemindersPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 
