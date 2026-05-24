@@ -19,7 +19,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           className="lg:hidden mb-4 text-text-muted hover:text-text"
           onClick={() => setSidebarOpen(true)}
         >
-          <i className="ti ti-menu-2 text-xl" aria-label="Open menu" />
+          <i className="ti ti-menu-2 text-xl pointer-events-none" aria-label="Open menu" />
         </button>
         {children}
       </main>
