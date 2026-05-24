@@ -285,9 +285,13 @@ export function ReminderDetailPage() {
       // If a new recording was provided, upload it first
       let recordingUrl = reminder.recording_url
       if (audioBase64) {
+        const { data: { session } } = await supabase.auth.getSession()
         const { data: fnData, error: fnError } = await supabase.functions.invoke(
           'admin-upload-audio',
-          { body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName } }
+          {
+            body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName },
+            headers: { Authorization: `Bearer ${session?.access_token}` }
+          }
         )
         if (fnError) throw new Error(fnError.message)
         if (fnData?.error) throw new Error(fnData.error)

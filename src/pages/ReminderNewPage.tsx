@@ -228,9 +228,13 @@ export function ReminderNewPage() {
       // 1. Upload audio to Storage via Edge Function (skip if reusing pre-filled recording)
       let recordingUrl: string
       if (audioBase64) {
+        const { data: { session } } = await supabase.auth.getSession()
         const { data: fnData, error: fnError } = await supabase.functions.invoke(
           'admin-upload-audio',
-          { body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName } }
+          {
+            body: { audio_base64: audioBase64, mime_type: audioMimeType, file_name: audioFileName },
+            headers: { Authorization: `Bearer ${session?.access_token}` }
+          }
         )
         if (fnError) throw new Error(fnError.message)
         if (fnData?.error) throw new Error(fnData.error)

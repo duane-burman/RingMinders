@@ -105,8 +105,10 @@ export function useResetPin() {
   return useMutation({
     mutationFn: async (id: string) => {
       const pin = String(Math.floor(1000 + Math.random() * 9000))
+      const { data: { session } } = await supabase.auth.getSession()
       const { data, error } = await supabase.functions.invoke('admin-reset-pin', {
-        body: { user_id: id, pin }
+        body: { user_id: id, pin },
+        headers: { Authorization: `Bearer ${session?.access_token}` }
       })
       if (error) throw error
       return { pin, ...data }
