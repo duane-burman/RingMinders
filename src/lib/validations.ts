@@ -153,3 +153,15 @@ export const reminderUpdateSchema = z.object({
 )
 
 export type ReminderUpdateFormData = z.infer<typeof reminderUpdateSchema>
+
+export const settingsSchema = z.object({
+  default_timezone: z.string().min(1, 'Timezone is required'),
+  default_retry_max_attempts: z.coerce.number().int().min(1).max(10),
+  default_retry_interval_minutes: z.coerce.number().int().min(5).max(60),
+  max_recording_length_seconds: z.coerce.number().int().min(30).max(300),
+  account_lockout_threshold: z.coerce.number().int().min(3).max(10),
+  account_lockout_duration_minutes: z.coerce.number().int().min(5).max(1440),
+  scheduler_concurrency_limit: z.coerce.number().int().min(1).max(50),
+})
+
+export type SettingsFormData = z.infer<typeof settingsSchema>

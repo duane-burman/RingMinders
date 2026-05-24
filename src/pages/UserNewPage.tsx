@@ -1,11 +1,12 @@
 // New user — form to create a new user account
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { userSchema } from '@/lib/validations'
 import type { UserFormData } from '@/lib/validations'
 import { useCreateUser } from '@/hooks/useUsers'
+import { useSettings } from '@/hooks/useSettings'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,7 @@ function formatPhoneInput(value: string): string {
 export function UserNewPage() {
   const navigate = useNavigate()
   const createUser = useCreateUser()
+  const { data: settings } = useSettings()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [generatedPin, setGeneratedPin] = useState<string | null>(null)
 
@@ -41,15 +43,33 @@ export function UserNewPage() {
     resolver: zodResolver(userSchema) as any,
     mode: 'onSubmit',
     defaultValues: {
-      timezone: 'America/New_York',
-      retry_max_attempts: 3,
-      retry_interval_minutes: 15,
+      name: '',
       primary_phone: '',
       secondary_phone: '',
+      pin: '',
+      timezone: settings?.default_timezone ?? 'America/New_York',
+      retry_max_attempts: settings?.default_retry_max_attempts ?? 3,
+      retry_interval_minutes: settings?.default_retry_interval_minutes ?? 15,
+      notes: '',
     },
   })
 
-  const { register, handleSubmit, setValue, control, formState: { errors, isSubmitting } } = form
+  const { register, handleSubmit, setValue, control, reset, formState: { errors, isSubmitting } } = form
+
+  useEffect(() => {
+    if (settings) {
+      reset({
+        name: '',
+        primary_phone: '',
+        secondary_phone: '',
+        pin: '',
+        timezone: settings.default_timezone,
+        retry_max_attempts: settings.default_retry_max_attempts,
+        retry_interval_minutes: settings.default_retry_interval_minutes,
+        notes: '',
+      })
+    }
+  }, [settings, reset])
 
   const handleGeneratePin = () => {
     const pin = generatePin()

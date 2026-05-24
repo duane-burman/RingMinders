@@ -206,6 +206,42 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          account_lockout_duration_minutes: number
+          account_lockout_threshold: number
+          default_retry_interval_minutes: number
+          default_retry_max_attempts: number
+          default_timezone: string
+          id: number
+          max_recording_length_seconds: number
+          scheduler_concurrency_limit: number
+          updated_at: string
+        }
+        Insert: {
+          account_lockout_duration_minutes?: number
+          account_lockout_threshold?: number
+          default_retry_interval_minutes?: number
+          default_retry_max_attempts?: number
+          default_timezone?: string
+          id?: number
+          max_recording_length_seconds?: number
+          scheduler_concurrency_limit?: number
+          updated_at?: string
+        }
+        Update: {
+          account_lockout_duration_minutes?: number
+          account_lockout_threshold?: number
+          default_retry_interval_minutes?: number
+          default_retry_max_attempts?: number
+          default_timezone?: string
+          id?: number
+          max_recording_length_seconds?: number
+          scheduler_concurrency_limit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
