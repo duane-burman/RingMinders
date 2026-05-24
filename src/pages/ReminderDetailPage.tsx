@@ -1,5 +1,6 @@
 // Reminder detail — view and edit a single reminder
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -122,7 +123,6 @@ export function ReminderDetailPage() {
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Audio state
   const [audioBase64, setAudioBase64] = useState<string | null>(null)
@@ -313,7 +313,7 @@ export function ReminderDetailPage() {
         repeat_end_date: data.repeat_end_date || null,
       })
 
-      setSaveSuccess(true)
+      toast.success('Reminder updated successfully.')
       // Reset dirty state — re-derive values from saved data
       initialPopulated.current = false
       setAudioBase64(null)
@@ -379,12 +379,6 @@ export function ReminderDetailPage() {
             {submitError && (
               <Alert variant="destructive" className="mb-6">
                 <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
-            )}
-
-            {saveSuccess && (
-              <Alert className="mb-6">
-                <AlertDescription>Reminder saved successfully.</AlertDescription>
               </Alert>
             )}
 
