@@ -1,5 +1,4 @@
-// Displays a single summary metric on the dashboard with colored accent
-import { cn } from '@/lib/utils'
+// Displays a single summary metric on the dashboard with colored accent and optional background tint
 
 interface StatCardProps {
   label: string
@@ -9,45 +8,69 @@ interface StatCardProps {
   accent: 'primary' | 'success' | 'danger' | 'warning' | 'muted'
 }
 
-const accentStyles: Record<StatCardProps['accent'], { border: string; icon: string; value: string }> = {
+const accentConfig: Record<StatCardProps['accent'], {
+  bg: string
+  border: string
+  cardBorder: string
+  iconColor: string
+  valueColor: string
+}> = {
   primary: {
-    border: 'border-l-primary',
-    icon: 'text-primary',
-    value: 'text-text',
-  },
-  success: {
-    border: 'border-l-success',
-    icon: 'text-success',
-    value: 'text-success',
-  },
-  danger: {
-    border: 'border-l-destructive',
-    icon: 'text-destructive',
-    value: 'text-destructive',
-  },
-  warning: {
-    border: 'border-l-warning',
-    icon: 'text-warning',
-    value: 'text-warning',
+    bg: '#FFFFFF',
+    border: '#E2E6EC',
+    cardBorder: '#4ECDC4',
+    iconColor: '#4ECDC4',
+    valueColor: '#1A2B42',
   },
   muted: {
-    border: 'border-l-border',
-    icon: 'text-text-muted',
-    value: 'text-text',
+    bg: '#FFFFFF',
+    border: '#E2E6EC',
+    cardBorder: '#6B7A90',
+    iconColor: '#6B7A90',
+    valueColor: '#1A2B42',
+  },
+  success: {
+    bg: '#F0FDF4',
+    border: '#BBF7D0',
+    cardBorder: '#3DBE6E',
+    iconColor: '#3DBE6E',
+    valueColor: '#3DBE6E',
+  },
+  danger: {
+    bg: '#FEF2F2',
+    border: '#FECACA',
+    cardBorder: '#E05555',
+    iconColor: '#E05555',
+    valueColor: '#E05555',
+  },
+  warning: {
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+    cardBorder: '#E8A838',
+    iconColor: '#E8A838',
+    valueColor: '#E8A838',
   },
 }
 
 export function StatCard({ label, value, sub, icon, accent }: StatCardProps) {
-  const styles = accentStyles[accent]
+  const config = accentConfig[accent]
   return (
-    <div className={cn(
-      'bg-surface border border-border rounded-lg p-4 border-l-4',
-      styles.border
-    )}>
-      <i className={cn(`ti ${icon} text-lg mb-2 block`, styles.icon)} aria-hidden="true" />
-      <p className="text-text-muted text-xs uppercase tracking-wide mb-1">{label}</p>
-      <p className={cn('text-3xl font-semibold', styles.value)}>{value}</p>
-      {sub && <p className="text-text-muted text-xs mt-1">{sub}</p>}
+    <div
+      className="rounded-lg p-4"
+      style={{
+        background: config.bg,
+        border: `0.5px solid ${config.border}`,
+        borderLeft: `4px solid ${config.cardBorder}`,
+      }}
+    >
+      <i
+        className={`ti ${icon} text-lg mb-2 block`}
+        style={{ color: config.iconColor }}
+        aria-hidden="true"
+      />
+      <p className="text-xs uppercase tracking-wide mb-1" style={{ color: '#6B7A90' }}>{label}</p>
+      <p className="text-3xl font-semibold" style={{ color: config.valueColor }}>{value}</p>
+      {sub && <p className="text-xs mt-1" style={{ color: '#6B7A90' }}>{sub}</p>}
     </div>
   )
 }
