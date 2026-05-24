@@ -137,14 +137,13 @@ export function ReminderNewPage() {
   useEffect(() => {
     if (!selectedUser || !prefillCallbackNumber || prefillApplied.current) return
     prefillApplied.current = true
-    const stripped = prefillCallbackNumber.replace(/^\+1/, '')
-    if (stripped === selectedUser.primary_phone) {
+    if (prefillCallbackNumber === selectedUser.primary_phone) {
       setValue('callback_type', 'primary')
-    } else if (selectedUser.secondary_phone && stripped === selectedUser.secondary_phone) {
+    } else if (selectedUser.secondary_phone && prefillCallbackNumber === selectedUser.secondary_phone) {
       setValue('callback_type', 'secondary')
     } else {
       setValue('callback_type', 'custom')
-      setValue('custom_callback', stripped)
+      setValue('custom_callback', prefillCallbackNumber.replace(/^\+1/, ''))
     }
   }, [selectedUser, prefillCallbackNumber, setValue])
 
