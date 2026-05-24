@@ -1,17 +1,18 @@
 // Persistent layout wrapper for all authenticated pages
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Sidebar } from './Sidebar'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={closeSidebar}
         />
       )}
       <main className="flex-1 lg:ml-48 min-w-0 p-4 lg:p-8">
