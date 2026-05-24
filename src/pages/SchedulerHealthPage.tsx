@@ -1,9 +1,6 @@
-// Scheduler health — real-time monitor of the pg_cron reminder scheduler
+// Redirects to the Reports page Scheduler tab
+import { Navigate } from 'react-router-dom'
+
 export function SchedulerHealthPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold text-text mb-1">Scheduler Health</h1>
-      <p className="text-text-muted text-sm">Coming soon.</p>
-    </div>
-  )
+  return <Navigate to="/reports?tab=scheduler" replace />
 }
