@@ -89,8 +89,13 @@ export type Database = {
           parent_reminder_id: string | null
           recording_duration: number | null
           recording_url: string
+          repeat_day_of_month: number | null
+          repeat_day_of_week: number | null
+          repeat_days_of_week: number[] | null
           repeat_end_date: string | null
           repeat_interval_days: number | null
+          repeat_type: string | null
+          repeat_week_of_month: number | null
           scheduled_at: string
           source: string
           status: string
@@ -111,8 +116,13 @@ export type Database = {
           parent_reminder_id?: string | null
           recording_duration?: number | null
           recording_url: string
+          repeat_day_of_month?: number | null
+          repeat_day_of_week?: number | null
+          repeat_days_of_week?: number[] | null
           repeat_end_date?: string | null
           repeat_interval_days?: number | null
+          repeat_type?: string | null
+          repeat_week_of_month?: number | null
           scheduled_at: string
           source: string
           status?: string
@@ -133,8 +143,13 @@ export type Database = {
           parent_reminder_id?: string | null
           recording_duration?: number | null
           recording_url?: string
+          repeat_day_of_month?: number | null
+          repeat_day_of_week?: number | null
+          repeat_days_of_week?: number[] | null
           repeat_end_date?: string | null
           repeat_interval_days?: number | null
+          repeat_type?: string | null
+          repeat_week_of_month?: number | null
           scheduled_at?: string
           source?: string
           status?: string

@@ -145,8 +145,13 @@ The system consists of four primary components:
 | status | TEXT | NOT NULL, DEFAULT 'pending', CHECK (status IN ('pending', 'in_progress', 'delivered', 'voicemail', 'missed', 'heard', 'cancelled', 'expired')) | Current reminder status |
 | source | TEXT | NOT NULL, CHECK (source IN ('ivr', 'admin')) | How the reminder was created |
 | is_repeating | BOOLEAN | DEFAULT false | Whether this reminder repeats |
-| repeat_interval_days | INTEGER | NULLABLE | Days between repetitions (e.g., 7 for weekly) |
-| repeat_end_date | DATE | NULLABLE | When the repeating series ends (NULL = indefinite) |
+| repeat_type | TEXT | NULLABLE, CHECK (repeat_type IN ('daily', 'weekly', 'monthly_date', 'monthly_day')) | Repeat frequency type. NULL when is_repeating = false. |
+| repeat_interval_days | INTEGER | NULLABLE | Days between repetitions. Used only when repeat_type = 'daily'. |
+| repeat_days_of_week | INTEGER[] | NULLABLE | Array of weekday integers (0=Sunday, 6=Saturday). Used only when repeat_type = 'weekly'. |
+| repeat_day_of_month | INTEGER | NULLABLE | Day of month 1–28. Used only when repeat_type = 'monthly_date'. |
+| repeat_week_of_month | INTEGER | NULLABLE | Week of month 1–4 (First/Second/Third/Fourth). Used only when repeat_type = 'monthly_day'. |
+| repeat_day_of_week | INTEGER | NULLABLE | Weekday integer 0–6. Used only when repeat_type = 'monthly_day'. Combined with repeat_week_of_month to express e.g. 'First Monday'. |
+| repeat_end_date | DATE | NULLABLE | When the repeating series ends. NULL = indefinite. Applies to all repeat types. |
 | parent_reminder_id | UUID | FK → reminders.id, NULLABLE | Links to the original repeating reminder |
 | delivery_attempts | INTEGER | DEFAULT 0 | Number of call attempts made |
 | last_attempt_at | TIMESTAMPTZ | NULLABLE | When the last delivery attempt occurred |
@@ -585,12 +590,22 @@ The LIMIT 10 prevents the scheduler from overwhelming Twilio with simultaneous c
 
 ### 9.3 Repeating Reminders
 
-Repeating reminders are configured only through the Admin UI (not via IVR). When a repeating reminder is delivered or reaches its final status (delivered, voicemail, or missed), the system automatically creates the next occurrence:
+Repeating reminders are configured only through the Admin UI (not via IVR). The following repeat types are supported:
 
-1. Check if `is_repeating` = true and (`repeat_end_date` is NULL or next scheduled date <= `repeat_end_date`).
-2. Create a new reminder record with `scheduled_at` = current `scheduled_at` + `repeat_interval_days`.
-3. Set `parent_reminder_id` to the original reminder's ID for tracking.
-4. New reminder inherits all properties (`callback_number`, `recording_url`) from the parent.
+- **Daily:** Fires every X days. X is stored in `repeat_interval_days`. Range: 1–365.
+- **Weekly:** Fires on selected days of the week. Selected days stored as an integer array in `repeat_days_of_week` (0=Sunday, 6=Saturday). Multiple days allowed (e.g., [1,3,5] = Mon/Wed/Fri).
+- **Monthly — specific date:** Fires on a specific day of the month. Day stored in `repeat_day_of_month`. Range: 1–28 only (avoids February and short-month edge cases).
+- **Monthly — day pattern:** Fires on a specific week/day combination each month (e.g., "First Monday"). Week stored in `repeat_week_of_month` (1–4), day stored in `repeat_day_of_week` (0–6).
+
+All repeat types support an optional `repeat_end_date`. When NULL the series repeats indefinitely.
+
+When a repeating reminder is delivered or reaches final status, the system calculates the next occurrence based on `repeat_type` and creates a new reminder record with `parent_reminder_id` pointing to the original. The new reminder inherits `callback_number`, `recording_url`, and all repeat configuration from the parent.
+
+**Next occurrence calculation rules:**
+- Daily: `scheduled_at + repeat_interval_days days`
+- Weekly: next occurrence of any day in `repeat_days_of_week` after current `scheduled_at`
+- Monthly date: same `repeat_day_of_month` in the next month
+- Monthly day pattern: calculate the Nth weekday of the next month using `repeat_week_of_month` and `repeat_day_of_week`
 
 ---
 
