@@ -9,6 +9,12 @@ export default {
     'translate-x-0',
     '-translate-x-full',
     'lg:translate-x-0',
+    'border-l-4',
+    'border-l-primary',
+    'border-l-success',
+    'border-l-destructive',
+    'border-l-warning',
+    'border-l-border',
   ],
   theme: {
   	extend: {

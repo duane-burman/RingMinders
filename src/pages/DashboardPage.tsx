@@ -55,23 +55,44 @@ export function DashboardPage() {
           </>
         ) : stats ? (
           <>
-            <StatCard label="Active Users" value={stats.total_active_users} />
-            <StatCard label="Pending Reminders" value={stats.total_pending_reminders} />
-            <StatCard label="Due Today" value={stats.reminders_due_today} />
+            <StatCard
+              label="Active Users"
+              value={stats.total_active_users}
+              icon="ti-users"
+              accent="primary"
+            />
+            <StatCard
+              label="Pending Reminders"
+              value={stats.total_pending_reminders}
+              icon="ti-clock"
+              accent="muted"
+            />
+            <StatCard
+              label="Due Today"
+              value={stats.reminders_due_today}
+              icon="ti-calendar"
+              accent="muted"
+            />
             <StatCard
               label="Delivered Today"
               value={stats.delivered_today}
-              valueClassName={stats.delivered_today > 0 ? 'text-success' : 'text-text'}
+              sub={stats.delivered_today > 0 ? 'Delivered successfully' : undefined}
+              icon="ti-check"
+              accent={stats.delivered_today > 0 ? 'success' : 'muted'}
             />
             <StatCard
               label="Missed Today"
               value={stats.missed_today}
-              valueClassName={stats.missed_today > 0 ? 'text-destructive' : 'text-text'}
+              sub={stats.missed_today > 0 ? 'All retries exhausted' : undefined}
+              icon="ti-bell-off"
+              accent={stats.missed_today > 0 ? 'danger' : 'muted'}
             />
             <StatCard
               label="Failed Calls (24h)"
               value={stats.failed_calls_24h}
-              valueClassName={stats.failed_calls_24h > 0 ? 'text-warning' : 'text-text'}
+              sub={stats.failed_calls_24h > 0 ? 'Last 24 hours' : undefined}
+              icon="ti-phone-off"
+              accent={stats.failed_calls_24h > 0 ? 'warning' : 'muted'}
             />
           </>
         ) : null}
