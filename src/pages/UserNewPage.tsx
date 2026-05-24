@@ -19,14 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-const TIMEZONES = [
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Phoenix',
-]
-
 function generatePin(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, '0')
 }
@@ -196,16 +188,20 @@ export function UserNewPage() {
                 name="timezone"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value || ''} onValueChange={field.onChange}>
-                    <SelectTrigger id="timezone">
+                  <Select
+                    key={field.value}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <SelectTrigger>
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz} value={tz}>
-                          {tz}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="America/New_York">America/New_York</SelectItem>
+                      <SelectItem value="America/Chicago">America/Chicago</SelectItem>
+                      <SelectItem value="America/Denver">America/Denver</SelectItem>
+                      <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                      <SelectItem value="America/Phoenix">America/Phoenix</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

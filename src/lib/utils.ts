@@ -10,7 +10,7 @@ export function formatPhone(phone: string): string {
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
 }
 
-export function formatDateTime(iso: string, timezone: string): string {
+export function formatDateTime(iso: string, timezone = 'America/New_York'): string {
   return new Date(iso).toLocaleString('en-US', {
     timeZone: timezone,
     month: 'short',
@@ -20,4 +20,9 @@ export function formatDateTime(iso: string, timezone: string): string {
     minute: '2-digit',
     hour12: true
   })
+}
+
+export function isLockedOut(lockedUntil: string | null): boolean {
+  if (!lockedUntil) return false
+  return new Date(lockedUntil) > new Date()
 }

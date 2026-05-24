@@ -1,5 +1,5 @@
 // User detail — view and edit a user account, manage PIN and status
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,14 +34,6 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
 
-const TIMEZONES = [
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Phoenix',
-]
-
 function formatPhoneInput(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 10)
   if (digits.length <= 3) return digits
@@ -68,6 +60,7 @@ export function UserDetailPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [newPin, setNewPin] = useState<string | null>(null)
   const [pinModalOpen, setPinModalOpen] = useState(false)
+  const initialPopulated = useRef(false)
 
   const form = useForm<UserUpdateFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,9 +70,11 @@ export function UserDetailPage() {
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = form
 
-  // Populate form once user data loads
+  // Populate form on first load only — do not re-populate on background refetches
+  // so unsaved changes (including timezone) aren't wiped
   useEffect(() => {
-    if (user) {
+    if (user && !initialPopulated.current) {
+      initialPopulated.current = true
       reset({
         name: user.name,
         primary_phone: toRawDigits(user.primary_phone),
@@ -106,6 +101,7 @@ export function UserDetailPage() {
         retry_interval_minutes: data.retry_interval_minutes,
         notes: data.notes || null,
       })
+      reset(data)
       toast({ title: 'User updated successfully' })
     } catch (err) {
       setSubmitError((err as Error).message)
@@ -239,18 +235,22 @@ export function UserDetailPage() {
                   <Label htmlFor="timezone">Timezone</Label>
                   <Controller
                     name="timezone"
-                    control={control}
+                    control={form.control}
                     render={({ field }) => (
-                      <Select value={field.value || ''} onValueChange={field.onChange}>
-                        <SelectTrigger id="timezone">
+                      <Select
+                        key={field.value}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
                           <SelectValue placeholder="Select timezone" />
                         </SelectTrigger>
                         <SelectContent>
-                          {TIMEZONES.map((tz) => (
-                            <SelectItem key={tz} value={tz}>
-                              {tz}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="America/New_York">America/New_York</SelectItem>
+                          <SelectItem value="America/Chicago">America/Chicago</SelectItem>
+                          <SelectItem value="America/Denver">America/Denver</SelectItem>
+                          <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                          <SelectItem value="America/Phoenix">America/Phoenix</SelectItem>
                         </SelectContent>
                       </Select>
                     )}

@@ -9,6 +9,7 @@ import { UsersPage } from '@/pages/UsersPage'
 import { UserDetailPage } from '@/pages/UserDetailPage'
 import { UserNewPage } from '@/pages/UserNewPage'
 import { RemindersPage } from '@/pages/RemindersPage'
+import { ReminderNewPage } from '@/pages/ReminderNewPage'
 import { ReminderDetailPage } from '@/pages/ReminderDetailPage'
 import { CallLogPage } from '@/pages/CallLogPage'
 import { ReportsPage } from '@/pages/ReportsPage'
@@ -32,6 +33,7 @@ function App() {
                   <Route path="/users/new" element={<UserNewPage />} />
                   <Route path="/users/:id" element={<UserDetailPage />} />
                   <Route path="/reminders" element={<RemindersPage />} />
+                  <Route path="/reminders/new" element={<ReminderNewPage />} />
                   <Route path="/reminders/:id" element={<ReminderDetailPage />} />
                   <Route path="/call-log" element={<CallLogPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
