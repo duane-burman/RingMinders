@@ -34,6 +34,30 @@ export function useReminders(filters?: {
   })
 }
 
+export function useCreateReminder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: {
+      user_id: string
+      scheduled_at: string
+      callback_number: string
+      recording_url: string
+      recording_duration?: number
+      is_repeating: boolean
+      repeat_interval_days?: number
+      repeat_end_date?: string
+    }) => {
+      const { error } = await supabase.from('reminders').insert({
+        ...data,
+        status: 'pending',
+        source: 'admin',
+      })
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] })
+  })
+}
+
 export function useCancelReminder() {
   const queryClient = useQueryClient()
   return useMutation({

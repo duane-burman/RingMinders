@@ -13,6 +13,7 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			// RingMinder design tokens
   			background: '#F4F6F9',
   			surface: '#FFFFFF',
   			border: '#E2E6EC',
@@ -35,6 +36,30 @@ export default {
   			},
   			success: '#3DBE6E',
   			warning: '#E8A838',
+  			// shadcn semantic tokens (required by shadcn components)
+  			foreground: 'hsl(var(--foreground))',
+  			card: {
+  				DEFAULT: 'hsl(var(--card))',
+  				foreground: 'hsl(var(--card-foreground))',
+  			},
+  			popover: {
+  				DEFAULT: 'hsl(var(--popover))',
+  				foreground: 'hsl(var(--popover-foreground))',
+  			},
+  			secondary: {
+  				DEFAULT: 'hsl(var(--secondary))',
+  				foreground: 'hsl(var(--secondary-foreground))',
+  			},
+  			muted: {
+  				DEFAULT: 'hsl(var(--muted))',
+  				foreground: 'hsl(var(--muted-foreground))',
+  			},
+  			accent: {
+  				DEFAULT: 'hsl(var(--accent))',
+  				foreground: 'hsl(var(--accent-foreground))',
+  			},
+  			input: 'hsl(var(--input))',
+  			ring: 'hsl(var(--ring))',
   		}
   	}
   },
