@@ -763,20 +763,24 @@ This section is the authoritative specification for all frontend development. Do
 
 Product name: **RingMinder**
 Tagline: *It actually calls you back.*
-Theme: Dark
+**Theme:** Light with dark navy sidebar
 
 Color palette — use these exact hex values, no deviations:
 
 ```
---color-background:   #0A1628   (page background)
---color-surface:      #0F2044   (cards, panels, modals)
---color-border:       #1E3A5F   (borders, dividers)
---color-primary:      #2DD4BF   (primary actions, active states, brand accent)
---color-text:         #E2E8F0   (primary text)
---color-text-muted:   #94A3B8   (secondary text, labels, placeholders)
---color-destructive:  #EF4444   (delete, cancel, error states)
---color-success:      #22C55E   (delivered status, confirmations)
---color-warning:      #F59E0B   (voicemail status, retrying states)
+--color-background:      #F4F6F9   (page background)
+--color-surface:         #FFFFFF   (cards, panels, modals)
+--color-border:          #E2E6EC   (borders, dividers)
+--color-sidebar-bg:      #152438   (sidebar background)
+--color-sidebar-text:    #8899AA   (inactive nav items)
+--color-sidebar-active:  #4ECDC4   (active nav item accent)
+--color-primary:         #4ECDC4   (buttons, active states, brand accent)
+--color-primary-fg:      #1A2B42   (text on primary backgrounds)
+--color-text:            #1A2B42   (primary text)
+--color-text-muted:      #6B7A90   (secondary text, labels, placeholders)
+--color-destructive:     #E05555   (delete, cancel, error states)
+--color-success:         #3DBE6E   (delivered status, confirmations)
+--color-warning:         #E8A838   (voicemail status, retrying states)
 ```
 
 Typography:
