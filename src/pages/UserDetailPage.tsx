@@ -13,7 +13,7 @@ import {
   useResetPin,
 } from '@/hooks/useUsers'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { formatDateTime } from '@/lib/utils'
+import { formatDateTime, formatPhoneInput, TIMEZONES } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,13 +32,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-
-function formatPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 10)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-}
 
 // Strip E.164 prefix to get raw 10 digits for the form
 function toRawDigits(phone: string): string {
@@ -254,11 +247,9 @@ export function UserDetailPage() {
                           <SelectValue placeholder="Select timezone" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="America/New_York">America/New_York</SelectItem>
-                          <SelectItem value="America/Chicago">America/Chicago</SelectItem>
-                          <SelectItem value="America/Denver">America/Denver</SelectItem>
-                          <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
-                          <SelectItem value="America/Phoenix">America/Phoenix</SelectItem>
+                          {TIMEZONES.map((tz) => (
+                            <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}

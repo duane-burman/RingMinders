@@ -9,7 +9,7 @@ import { useUsers } from '@/hooks/useUsers'
 import type { User } from '@/hooks/useUsers'
 import { useCreateReminder } from '@/hooks/useReminders'
 import { supabase } from '@/lib/supabase'
-import { formatPhone, cn } from '@/lib/utils'
+import { formatPhone, formatPhoneInput, toUtcIso, ordinal, dateTimeInputClass, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,51 +24,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-// Shared input className to match shadcn Input
-const inputClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-
-function formatPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 10)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-}
-
-// Convert local date+time in a given timezone to a UTC ISO string
-function toUtcIso(dateStr: string, timeStr: string, timezone: string): string {
-  // Treat the input as UTC to use as a reference, then find the offset
-  const naiveUtc = new Date(`${dateStr}T${timeStr}:00Z`)
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-  const formatted = formatter.format(naiveUtc) // e.g. "2026-05-25, 05:00"
-  const [localDate, localTime] = formatted.split(', ')
-  const displayedMs = new Date(`${localDate}T${localTime}:00Z`).getTime()
-  const correction = naiveUtc.getTime() - displayedMs
-  return new Date(naiveUtc.getTime() + correction).toISOString()
-}
-
-const today = new Date().toISOString().split('T')[0]
-
-function ordinal(n: number): string {
-  if (n >= 11 && n <= 13) return `${n}th`
-  switch (n % 10) {
-    case 1: return `${n}st`
-    case 2: return `${n}nd`
-    case 3: return `${n}rd`
-    default: return `${n}th`
-  }
-}
 
 export function ReminderNewPage() {
   const navigate = useNavigate()
+  const today = new Date().toISOString().split('T')[0]
   const [searchParams] = useSearchParams()
 
   // Pre-population from "Create Similar" flow
@@ -308,7 +267,6 @@ export function ReminderNewPage() {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    key={field.value}
                     value={field.value}
                     onValueChange={field.onChange}
                   >
@@ -337,7 +295,7 @@ export function ReminderNewPage() {
                 id="scheduled_date"
                 type="date"
                 min={today}
-                className={inputClass}
+                className={dateTimeInputClass}
                 {...register('scheduled_date')}
               />
               {errors.scheduled_date && (
@@ -351,7 +309,7 @@ export function ReminderNewPage() {
               <input
                 id="scheduled_time"
                 type="time"
-                className={inputClass}
+                className={dateTimeInputClass}
                 {...register('scheduled_time')}
               />
               {errors.scheduled_time && (
@@ -732,7 +690,7 @@ export function ReminderNewPage() {
                       id="repeat_end_date"
                       type="date"
                       min={watchedScheduledDate || new Date().toISOString().split('T')[0]}
-                      className={inputClass + ' w-48'}
+                      className={dateTimeInputClass + ' w-48'}
                       {...register('repeat_end_date')}
                     />
                   </div>

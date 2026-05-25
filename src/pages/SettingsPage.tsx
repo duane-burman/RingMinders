@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { settingsSchema } from '@/lib/validations'
 import type { SettingsFormData } from '@/lib/validations'
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings'
+import { TIMEZONES } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -96,11 +97,9 @@ export function SettingsPage() {
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="America/New_York">America/New_York</SelectItem>
-                      <SelectItem value="America/Chicago">America/Chicago</SelectItem>
-                      <SelectItem value="America/Denver">America/Denver</SelectItem>
-                      <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
-                      <SelectItem value="America/Phoenix">America/Phoenix</SelectItem>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}

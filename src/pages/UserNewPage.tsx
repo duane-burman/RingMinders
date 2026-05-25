@@ -8,6 +8,7 @@ import type { UserFormData } from '@/lib/validations'
 import { useCreateUser } from '@/hooks/useUsers'
 import { useSettings } from '@/hooks/useSettings'
 import { supabase } from '@/lib/supabase'
+import { formatPhoneInput, TIMEZONES } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,12 +25,6 @@ function generatePin(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, '0')
 }
 
-function formatPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 10)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
-  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-}
 
 export function UserNewPage() {
   const navigate = useNavigate()
@@ -217,11 +212,9 @@ export function UserNewPage() {
                       <SelectValue placeholder="Select timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="America/New_York">America/New_York</SelectItem>
-                      <SelectItem value="America/Chicago">America/Chicago</SelectItem>
-                      <SelectItem value="America/Denver">America/Denver</SelectItem>
-                      <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
-                      <SelectItem value="America/Phoenix">America/Phoenix</SelectItem>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}

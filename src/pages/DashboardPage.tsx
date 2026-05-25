@@ -15,14 +15,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const today = new Date().toLocaleDateString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-})
-
 export function DashboardPage() {
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
   const navigate = useNavigate()
   const { data: stats, isLoading: statsLoading, error: statsError } = useDashboardStats()
   const { data: recentReminders, isLoading: remindersLoading, error: remindersError } = useRecentReminders()

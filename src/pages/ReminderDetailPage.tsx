@@ -8,7 +8,7 @@ import { reminderUpdateSchema } from '@/lib/validations'
 import type { ReminderUpdateFormData } from '@/lib/validations'
 import { useReminder, useUpdateReminder, useCancelReminder } from '@/hooks/useReminders'
 import { supabase } from '@/lib/supabase'
-import { formatPhone, formatDateTime, cn } from '@/lib/utils'
+import { formatPhone, formatDateTime, formatPhoneInput, toE164, utcToLocal, toUtcIso, ordinal, dateTimeInputClass, cn } from '@/lib/utils'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,74 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-// Shared input className to match shadcn Input
-const inputClass =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-
-function formatPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 10)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-}
-
-// Convert raw 10-digit input to E.164. Never apply to values already from the database.
-function toE164(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`
-  if (digits.length === 10) return `+1${digits}`
-  return phone // already E.164 or unrecognized — return as-is
-}
-
-// Convert UTC ISO string to local date and time strings in a given timezone
-function utcToLocal(isoStr: string, timezone: string): { date: string; time: string } {
-  const date = new Date(isoStr)
-  const datePart = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date) // "YYYY-MM-DD"
-
-  const timePart = new Intl.DateTimeFormat('en-GB', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date) // "HH:MM"
-
-  return { date: datePart, time: timePart }
-}
-
-// Convert local date+time in a given timezone to a UTC ISO string
-function toUtcIso(dateStr: string, timeStr: string, timezone: string): string {
-  const naiveUtc = new Date(`${dateStr}T${timeStr}:00Z`)
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-  const formatted = formatter.format(naiveUtc)
-  const [localDate, localTime] = formatted.split(', ')
-  const displayedMs = new Date(`${localDate}T${localTime}:00Z`).getTime()
-  const correction = naiveUtc.getTime() - displayedMs
-  return new Date(naiveUtc.getTime() + correction).toISOString()
-}
-
-function ordinal(n: number): string {
-  if (n >= 11 && n <= 13) return `${n}th`
-  switch (n % 10) {
-    case 1: return `${n}st`
-    case 2: return `${n}nd`
-    case 3: return `${n}rd`
-    default: return `${n}th`
-  }
-}
 
 // Determine callback_type by comparing E.164 values directly (all three are already E.164 from DB)
 function inferCallbackType(
@@ -396,7 +328,7 @@ export function ReminderDetailPage() {
                     id="scheduled_date"
                     type="date"
                     disabled={!isPending}
-                    className={inputClass}
+                    className={dateTimeInputClass}
                     {...register('scheduled_date')}
                   />
                   {errors.scheduled_date && (
@@ -411,7 +343,7 @@ export function ReminderDetailPage() {
                     id="scheduled_time"
                     type="time"
                     disabled={!isPending}
-                    className={inputClass}
+                    className={dateTimeInputClass}
                     {...register('scheduled_time')}
                   />
                   {errors.scheduled_time && (
@@ -802,7 +734,7 @@ export function ReminderDetailPage() {
                           type="date"
                           min={watchedScheduledDate || new Date().toISOString().split('T')[0]}
                           disabled={!isPending}
-                          className={inputClass + ' w-48'}
+                          className={dateTimeInputClass + ' w-48'}
                           {...register('repeat_end_date')}
                         />
                       </div>
@@ -824,7 +756,7 @@ export function ReminderDetailPage() {
                   <Button
                     type="submit"
                     className="bg-primary text-primary-foreground"
-                    disabled={isSubmitting || !isDirty && !audioBase64}
+                    disabled={isSubmitting || (!isDirty && !audioBase64)}
                   >
                     {isSubmitting ? 'Saving…' : 'Save Changes'}
                   </Button>
