@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import logo from '@/assets/logo-horizontal.png'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -39,9 +40,8 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="w-full max-w-sm bg-surface border border-border rounded-lg p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-primary">RingMinder</h1>
-          <p className="text-text-muted text-sm mt-1">It actually calls you back.</p>
+        <div className="mb-6 flex justify-center">
+          <img src={logo} alt="RingMinders" className="w-48" />
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>

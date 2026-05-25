@@ -1,5 +1,6 @@
 // Fixed sidebar navigation with branding, nav links, and sign out
 import { useEffect } from 'react'
+import logo from '@/assets/logo-horizontal.png'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -42,8 +43,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     )}>
       {/* Logo */}
       <div className="px-4 py-5 border-b border-sidebar-text/20">
-        <div className="text-sidebar-active font-semibold text-sm">RingMinder</div>
-        <div className="text-sidebar-text text-xs mt-0.5">It actually calls you back.</div>
+        <img src={logo} alt="RingMinders" className="h-20 w-auto" />
       </div>
 
       {/* Close button — mobile only */}
