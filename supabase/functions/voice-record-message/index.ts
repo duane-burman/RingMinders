@@ -36,11 +36,16 @@ serve(async (req: Request) => {
     `&scheduledAt=${encodeURIComponent(scheduledAt)}` +
     `&callbackNumber=${encodeURIComponent(callbackNumber)}`
 
+  // Escape all & in URLs before embedding in XML attributes
+  const xmlAttr = (url: string) => url.replace(/&/g, '&amp;')
+  const actionUrl = xmlAttr(`${BASE_URL}/voice-confirm-reminder?${sessionParams}&source=keypress`)
+  const statusUrl = xmlAttr(`${BASE_URL}/voice-confirm-reminder?${sessionParams}&source=hangup`)
+
   LOG('return-2')
   return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Google.en-US-Neural2-F">Please leave your reminder message after the tone. Press pound when finished to review your message, or simply hang up to save it immediately.</Say>
-  <Record action="${BASE_URL}/voice-confirm-reminder?${sessionParams}&amp;source=keypress" method="POST" maxLength="120" finishOnKey="#" playBeep="true" recordingStatusCallback="${BASE_URL}/voice-confirm-reminder?${sessionParams}&amp;source=hangup" recordingStatusCallbackMethod="POST"/>
+  <Record action="${actionUrl}" method="POST" maxLength="120" finishOnKey="#" playBeep="true" recordingStatusCallback="${statusUrl}" recordingStatusCallbackMethod="POST"/>
   <Hangup/>
 </Response>`)
 })
