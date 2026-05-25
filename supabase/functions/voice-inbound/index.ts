@@ -38,7 +38,7 @@ serve(async (req: Request) => {
       return twimlResponse(gather({
       action: `${BASE_URL}/voice-lookup-number`,
       finishOnKey: '#',
-      message: 'Thank you for calling the Reminder Service. This call may be recorded. Your phone number was not recognized. If you have an account, please enter your ten-digit phone number followed by the pound key.',
+      message: 'Thank you for calling Ring Minder. Your phone number was not recognized. If you have an account, please enter your ten-digit phone number followed by the pound key.',
     }))
   }
 
@@ -59,7 +59,7 @@ serve(async (req: Request) => {
   const twiml = gather({
     action: `${BASE_URL}/voice-verify-pin?userId=${user.userId}&userName=${encodeURIComponent(user.userName)}&callerNumber=${encodeURIComponent(from)}`,
     numDigits: 4,
-    message: 'Thank you for calling the Reminder Service. This call may be recorded. Welcome back. Please enter your four-digit PIN.',
+    message: `Thank you for calling Ring Minder. Welcome back, ${user.userName}. Please enter your four-digit PIN.`,
   })
   LOG('return-5')
   return twimlResponse(twiml)
