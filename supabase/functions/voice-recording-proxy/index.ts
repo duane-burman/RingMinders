@@ -1,10 +1,7 @@
-// Proxy Twilio recording URLs — fetches with Twilio credentials, streams audio to browser
+// Proxies Twilio recording URLs with authentication so <Play> can access them
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, corsHeaders } from '../_shared/twilio.ts'
 import { encode } from 'https://deno.land/std@0.168.0/encoding/base64.ts'
-import { corsHeaders } from '../_shared/twilio.ts'
-
-const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID')!
-const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN')!
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -18,31 +15,33 @@ serve(async (req: Request) => {
     return new Response('Missing url parameter', { status: 400 })
   }
 
-  // Only proxy Twilio recording URLs
-  if (!recordingUrl.startsWith('https://api.twilio.com/') && !recordingUrl.startsWith('https://api.twilio.com')) {
-    return new Response('Invalid recording URL', { status: 400 })
+  // Append .mp3 if not already present to get the audio content directly
+  const audioUrl = recordingUrl.endsWith('.mp3') ? recordingUrl : `${recordingUrl}.mp3`
+
+  try {
+    const credentials = encode(new TextEncoder().encode(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`))
+
+    const response = await fetch(audioUrl, {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+      }
+    })
+
+    if (!response.ok) {
+      console.error(`Recording proxy failed: ${response.status} ${audioUrl}`)
+      return new Response('Recording not found', { status: 404 })
+    }
+
+    const audioData = await response.arrayBuffer()
+
+    return new Response(audioData, {
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
+  } catch (err) {
+    console.error('Recording proxy error:', err)
+    return new Response('Error fetching recording', { status: 500 })
   }
-
-  // Fetch the recording from Twilio with Basic Auth credentials
-  const credentials = encode(new TextEncoder().encode(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`))
-  const response = await fetch(recordingUrl, {
-    headers: {
-      'Authorization': `Basic ${credentials}`,
-    },
-  })
-
-  if (!response.ok) {
-    return new Response(`Failed to fetch recording: ${response.status}`, { status: response.status })
-  }
-
-  const contentType = response.headers.get('Content-Type') ?? 'audio/mpeg'
-  const audioData = await response.arrayBuffer()
-
-  return new Response(audioData, {
-    headers: {
-      'Content-Type': contentType,
-      'Cache-Control': 'private, max-age=3600',
-      ...corsHeaders,
-    },
-  })
 })

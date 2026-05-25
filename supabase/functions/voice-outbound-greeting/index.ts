@@ -75,7 +75,7 @@ serve(async (req: Request) => {
     .single()
 
   const userName = user?.name ?? 'a valued customer'
-  const recordingUrl = reminder.recording_url
+  const proxyUrl = `${BASE_URL}/voice-recording-proxy?url=${encodeURIComponent(reminder.recording_url)}`
 
   // Gather: 10-second window for keypress (human path)
   // Fallthrough after Gather: voicemail path — pause for beep, then play message
@@ -89,7 +89,7 @@ serve(async (req: Request) => {
   </Gather>
   <Pause length="3"/>
   <Say voice="alice">This is a reminder for ${userName}.</Say>
-  <Play>${recordingUrl}</Play>
+  <Play>${proxyUrl}</Play>
   <Say voice="alice">This message was sent by the Reminder Service. Goodbye.</Say>
   <Hangup/>
 </Response>`)
