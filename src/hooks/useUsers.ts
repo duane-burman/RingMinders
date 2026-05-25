@@ -44,9 +44,6 @@ export function useUpdateUserStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       queryClient.invalidateQueries({ queryKey: ['reminders'] })
-    },
-    onError: (error: Error) => {
-      console.error('Status update failed:', error.message)
     }
   })
 }
