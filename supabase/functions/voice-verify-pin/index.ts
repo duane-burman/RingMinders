@@ -85,7 +85,7 @@ serve(async (req: Request) => {
   LOG('return-6')
   return twimlResponse(gather({
     action: `${BASE_URL}/voice-verify-pin?userId=${userId}&userName=${encodeURIComponent(userName)}&callerNumber=${encodeURIComponent(callerNumber)}&attempts=${newCallAttempts}`,
-    numDigits: 4,
-    message: 'Incorrect PIN. Please try again. Enter your four-digit PIN.',
+    finishOnKey: '#',
+    message: 'Incorrect PIN. Please try again. Enter your four-digit PIN followed by pound.',
   }))
 })

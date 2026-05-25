@@ -58,8 +58,8 @@ serve(async (req: Request) => {
 
   const twiml = gather({
     action: `${BASE_URL}/voice-verify-pin?userId=${user.userId}&userName=${encodeURIComponent(user.userName)}&callerNumber=${encodeURIComponent(from)}`,
-    numDigits: 4,
-    message: `Thank you for calling Ring Minder. Welcome back, ${user.userName}. Please enter your four-digit PIN.`,
+    finishOnKey: '#',
+    message: `Thank you for calling Ring Minder. Welcome back, ${user.userName}. Please enter your four-digit PIN followed by pound.`,
   })
   LOG('return-5')
   return twimlResponse(twiml)
