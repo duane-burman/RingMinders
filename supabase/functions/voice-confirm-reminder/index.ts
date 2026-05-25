@@ -1,4 +1,4 @@
-// Final confirmation step: play back recording, save reminder on pound, restart on star
+// Final confirmation step: play back recording, save reminder on pound, restart on star, or auto-save on hangup
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
   twimlResponse,
@@ -44,10 +44,62 @@ serve(async (req: Request) => {
   const userName = url.searchParams.get('userName') ?? ''
   const scheduledAt = url.searchParams.get('scheduledAt') ?? ''
   const callbackNumber = url.searchParams.get('callbackNumber') ?? ''
+  const source = url.searchParams.get('source') ?? ''
   const recordingUrlFromQuery = url.searchParams.get('recordingUrl')
   const recordingDurationFromQuery = url.searchParams.get('recordingDuration') ?? ''
 
-  LOG('params', { userId, digits, scheduledAt, hasRecordingUrlInQuery: !!recordingUrlFromQuery })
+  LOG('params', { userId, digits, scheduledAt, source, hasRecordingUrlInQuery: !!recordingUrlFromQuery })
+
+  // ── Scenario C: hangup path — auto-save without playback or confirmation ──
+  // recordingStatusCallback fires asynchronously for every recording, including
+  // keypress completions, so check for an existing reminder before inserting.
+  if (source === 'hangup') {
+    const recordingUrl = postParams.get('RecordingUrl') ?? ''
+    const recordingDuration = postParams.get('RecordingDuration') ?? null
+
+    if (!recordingUrl) {
+      LOG('return-hangup-no-recording')
+      return new Response('ok', { status: 200 })
+    }
+
+    // Idempotency guard — prevent double-save when keypress path already confirmed
+    const { data: existing } = await supabaseAdmin
+      .from('reminders')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('scheduled_at', scheduledAt)
+      .maybeSingle()
+
+    if (existing) {
+      LOG('return-hangup-already-saved')
+      return new Response('ok', { status: 200 })
+    }
+
+    await supabaseAdmin.from('reminders').insert({
+      user_id: userId,
+      scheduled_at: scheduledAt,
+      callback_number: callbackNumber,
+      recording_url: recordingUrl,
+      recording_duration: recordingDuration ? parseInt(recordingDuration) : null,
+      status: 'pending',
+      source: 'ivr',
+      is_repeating: false,
+    })
+
+    await supabaseAdmin.from('call_log').insert({
+      user_id: userId,
+      direction: 'inbound',
+      from_number: callbackNumber,
+      to_number: TWILIO_PHONE_NUMBER,
+      twilio_call_sid: postParams.get('CallSid') ?? '',
+      call_status: 'completed',
+      outcome: 'reminder_created',
+    })
+
+    LOG('return-hangup-autosave')
+    return new Response('ok', { status: 200 })
+  }
+
   // Fetch user timezone for spoken date formatting
   const { data: user } = await supabaseAdmin
     .from('users')

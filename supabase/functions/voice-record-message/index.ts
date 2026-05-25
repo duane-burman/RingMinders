@@ -2,7 +2,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
   twimlResponse,
-  record,
   corsHeaders,
 } from '../_shared/twilio.ts'
 
@@ -30,10 +29,18 @@ serve(async (req: Request) => {
   const callbackNumber = url.searchParams.get('callbackNumber') ?? ''
 
   LOG('params', { userId, scheduledAt, callbackLast4: callbackNumber.slice(-4) })
+
+  const sessionParams =
+    `userId=${userId}` +
+    `&userName=${encodeURIComponent(userName)}` +
+    `&scheduledAt=${encodeURIComponent(scheduledAt)}` +
+    `&callbackNumber=${encodeURIComponent(callbackNumber)}`
+
   LOG('return-2')
-  return twimlResponse(record({
-    action: `${BASE_URL}/voice-confirm-reminder?userId=${userId}&userName=${encodeURIComponent(userName)}&scheduledAt=${encodeURIComponent(scheduledAt)}&callbackNumber=${encodeURIComponent(callbackNumber)}`,
-    maxLength: 120,
-    message: 'Please leave your reminder message after the tone. Press pound when you are finished, or simply hang up.',
-  }))
+  return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Google.en-US-Neural2-F">Please leave your reminder message after the tone. Press pound when finished to review your message, or simply hang up to save it immediately.</Say>
+  <Record action="${BASE_URL}/voice-confirm-reminder?${sessionParams}&amp;source=keypress" method="POST" maxLength="120" finishOnKey="#" playBeep="true" recordingStatusCallback="${BASE_URL}/voice-confirm-reminder?${sessionParams}&amp;source=hangup" recordingStatusCallbackMethod="POST"/>
+  <Hangup/>
+</Response>`)
 })
