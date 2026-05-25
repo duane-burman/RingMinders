@@ -56,6 +56,11 @@ export function sayAndHang(message: string): string {
 </Response>`
 }
 
+// Escape & in URLs for use in XML attributes
+function xmlAttr(url: string): string {
+  return url.replace(/&/g, '&amp;')
+}
+
 // Build a Gather TwiML (keypad input)
 export function gather(opts: {
   action: string
@@ -69,7 +74,7 @@ export function gather(opts: {
   const timeout = opts.timeout !== undefined ? `timeout="${opts.timeout}"` : 'timeout="10"'
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="dtmf" action="${opts.action}" method="POST" ${numDigits} ${finishOnKey} ${timeout}>
+  <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" ${numDigits} ${finishOnKey} ${timeout}>
     <Say voice="alice">${opts.message}</Say>
   </Gather>
   <Say voice="alice">We did not receive any input. Goodbye.</Say>
@@ -87,7 +92,7 @@ export function record(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="alice">${opts.message}</Say>
-  <Record action="${opts.action}" method="POST" maxLength="${maxLength}" finishOnKey="#" playBeep="true"/>
+  <Record action="${xmlAttr(opts.action)}" method="POST" maxLength="${maxLength}" finishOnKey="#" playBeep="true"/>
   <Hangup/>
 </Response>`
 }
@@ -101,7 +106,7 @@ export function playAndGather(opts: {
 }): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="dtmf" action="${opts.action}" method="POST" numDigits="${opts.numDigits ?? 1}" timeout="10">
+  <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" numDigits="${opts.numDigits ?? 1}" timeout="10">
     <Say voice="alice">${opts.message}</Say>
     <Play>${opts.playUrl}</Play>
   </Gather>

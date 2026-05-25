@@ -1,7 +1,7 @@
 // Caller authentication utilities
 import { supabaseAdmin } from './supabase.ts'
 import { CallerSession } from './types.ts'
-import * as bcrypt from 'https://esm.sh/bcryptjs@2.4.3'
+import bcrypt from 'https://esm.sh/bcryptjs@2.4.3'
 
 // Look up a user by phone number (primary or secondary)
 export async function lookupByPhone(phone: string): Promise<CallerSession | null> {

@@ -1,7 +1,6 @@
 // Apply AM/PM, validate calendar date and future requirement, read back for confirmation
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
-  validateTwilioSignature,
   twimlResponse,
   gather,
   sayDateTime,
@@ -68,12 +67,7 @@ serve(async (req: Request) => {
 
   const body = await req.text()
 
-  // TEMPORARILY DISABLED FOR DEBUGGING — re-enable before production
-  // const isValid = await validateTwilioSignature(req, body)
-  // if (!isValid) {
-  //   return new Response('Forbidden', { status: 403 })
-  // }
-  const isValid = true // temporary bypass
+  // TODO: re-enable Twilio signature validation — see docs/PIF.md Section 15
 
   const postParams = new URLSearchParams(body)
   const digits = postParams.get('Digits') ?? ''
