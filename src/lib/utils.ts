@@ -94,6 +94,28 @@ export function ordinal(n: number): string {
   }
 }
 
+// Returns the best Twilio-compatible MIME type the current browser supports.
+// Preference order: OGG/Opus (Chrome/Firefox, Twilio supports OGG), MP4 (Safari), WAV, browser default.
+export function getTwilioCompatibleMimeType(): string {
+  const candidates = [
+    'audio/ogg;codecs=opus',
+    'audio/mp4',
+    'audio/wav',
+  ]
+  for (const type of candidates) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) return type
+  }
+  return ''
+}
+
+// Returns the file extension that matches a given audio MIME type.
+export function getAudioExtension(mimeType: string): string {
+  if (mimeType.includes('ogg')) return 'ogg'
+  if (mimeType.includes('mp4')) return 'm4a'
+  if (mimeType.includes('wav')) return 'wav'
+  return 'webm'
+}
+
 // Shared className for native date/time inputs to match shadcn Input styling
 export const dateTimeInputClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'

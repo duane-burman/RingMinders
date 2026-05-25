@@ -9,7 +9,7 @@ import { useUsers } from '@/hooks/useUsers'
 import type { User } from '@/hooks/useUsers'
 import { useCreateReminder } from '@/hooks/useReminders'
 import { supabase } from '@/lib/supabase'
-import { formatPhone, formatPhoneInput, toUtcIso, ordinal, dateTimeInputClass, cn } from '@/lib/utils'
+import { formatPhone, formatPhoneInput, toUtcIso, ordinal, dateTimeInputClass, cn, getTwilioCompatibleMimeType, getAudioExtension } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -136,19 +136,23 @@ export function ReminderNewPage() {
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+      const mimeType = getTwilioCompatibleMimeType()
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       const chunks: BlobPart[] = []
 
       recorder.ondataavailable = (e) => chunks.push(e.data)
       recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' })
+        const actualMime = recorder.mimeType || mimeType || 'audio/webm'
+        const ext = getAudioExtension(actualMime)
+        const fileName = `recording.${ext}`
+        const blob = new Blob(chunks, { type: actualMime })
         const reader = new FileReader()
         reader.onload = () => {
           const base64 = (reader.result as string).split(',')[1]
           setAudioBase64(base64)
-          setAudioMimeType('audio/webm')
-          setAudioFileName('recording.webm')
-          setAudioDisplayName('recording.webm')
+          setAudioMimeType(actualMime)
+          setAudioFileName(fileName)
+          setAudioDisplayName(fileName)
         }
         reader.readAsDataURL(blob)
         stream.getTracks().forEach((t) => t.stop())
@@ -446,7 +450,7 @@ export function ReminderNewPage() {
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         <i className="ti ti-microphone mr-2" />
-                        {audioDisplayName === 'recording.webm' ? 'Re-record' : 'Start Recording'}
+                        {audioDisplayName?.startsWith('recording.') ? 'Re-record' : 'Start Recording'}
                       </Button>
                     ) : (
                       <Button
@@ -463,7 +467,7 @@ export function ReminderNewPage() {
                         Recording...
                       </span>
                     )}
-                    {!isRecording && audioDisplayName === 'recording.webm' && (
+                    {!isRecording && audioDisplayName?.startsWith('recording.') && (
                       <span className="text-text-muted text-sm">Recording captured</span>
                     )}
                   </div>
