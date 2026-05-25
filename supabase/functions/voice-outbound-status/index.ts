@@ -8,8 +8,14 @@ import {
 } from '../_shared/twilio.ts'
 import { supabaseAdmin } from '../_shared/supabase.ts'
 
+
+const LOG = (step: string, data?: Record<string, unknown>) =>
+  console.log(JSON.stringify({ fn: 'voice-outbound-status', step, ...(data ? { data } : {}) }))
 serve(async (req: Request) => {
+  LOG('entry', { method: req.method })
+
   if (req.method === 'OPTIONS') {
+    LOG('return-1')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -21,11 +27,13 @@ serve(async (req: Request) => {
 
   // Basic validation — status callbacks must include CallSid and CallStatus
   if (!callSid || !callStatus) {
+    LOG('return-2')
     return new Response('Bad Request', { status: 400 })
   }
 
   const url = new URL(req.url)
   const reminderId = url.searchParams.get('reminder_id') ?? ''
+  LOG('params', { callSid, callStatus, reminderId })
 
   const emptyTwiml = new Response(
     '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
@@ -41,6 +49,7 @@ serve(async (req: Request) => {
     .eq('id', reminderId)
     .single()
 
+  LOG('db-reminder', { found: !!reminder, status: reminder?.status ?? null })
   if (!reminder) return emptyTwiml
 
   // ── Call completed ─────────────────────────────────────────────────────────

@@ -10,6 +10,10 @@ import { supabaseAdmin } from '../_shared/supabase.ts'
 
 const BASE_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1`
 
+const LOG = (step: string, data?: Record<string, unknown>) =>
+  console.log(JSON.stringify({ fn: 'voice-process-due-reminders', step, ...(data ? { data } : {}) }))
+
+
 interface DueReminder {
   id: string
   user_id: string
@@ -25,6 +29,7 @@ interface DueReminder {
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
+    LOG('return-1')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -32,9 +37,11 @@ serve(async (req: Request) => {
   const authHeader = req.headers.get('Authorization')
   const expectedSecret = Deno.env.get('SCHEDULER_SECRET')
   if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+    LOG('return-2')
     return new Response('Forbidden', { status: 403 })
   }
 
+  LOG('entry', { now: new Date().toISOString() })
   const now = new Date().toISOString()
   const startTime = Date.now()
 
@@ -49,6 +56,7 @@ serve(async (req: Request) => {
     .limit(10)
 
   // Filter active users in code — PostgREST embedded resource filtering is unreliable here
+  LOG('db-reminders', { raw: rawReminders?.length ?? 0 })
   const reminders = ((rawReminders ?? []) as DueReminder[]).filter(r => {
     const userStatus = r.users?.status
     return userStatus === 'active'
@@ -106,6 +114,8 @@ serve(async (req: Request) => {
     duration_ms: Date.now() - startTime,
   })
 
+  LOG('done', { processed, failed })
+  LOG('return-3')
   return new Response(JSON.stringify({ processed, failed }), {
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
   })
