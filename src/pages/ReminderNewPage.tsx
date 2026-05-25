@@ -400,7 +400,7 @@ export function ReminderNewPage() {
               {prefillRecordingUrl && !audioUrl && (
                 <div className="space-y-1">
                   <p className="text-text-muted text-xs">Pre-filled recording (replace below if needed):</p>
-                  <audio controls src={prefillRecordingUrl} className="w-full h-10" />
+                  <audio controls src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-recording-proxy?url=${encodeURIComponent(prefillRecordingUrl)}`} className="w-full h-10" />
                 </div>
               )}
 
