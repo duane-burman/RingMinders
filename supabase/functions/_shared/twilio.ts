@@ -185,8 +185,9 @@ export function sayDateTime(isoString: string, timezone: string): string {
 // in the caller's local time rather than UTC.
 // Returns a Date (UTC) or null if parsing fails.
 export function parseSpeechDateTime(text: string, timezone: string): Date | null {
-  // Compute the UTC offset for this timezone at this moment
   const now = new Date()
+
+  // Get the current moment expressed as local date/time components in the user's timezone
   const localParts = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     year: 'numeric', month: 'numeric', day: 'numeric',
@@ -194,17 +195,21 @@ export function parseSpeechDateTime(text: string, timezone: string): Date | null
     hour12: false,
   }).formatToParts(now)
   const get = (type: string) => parseInt(localParts.find(p => p.type === type)!.value, 10)
-  const localMs = Date.UTC(
-    get('year'), get('month') - 1, get('day'),
-    get('hour') % 24, get('minute'), get('second')
-  )
+
+  // Build a "fake" UTC Date whose UTC values equal the user's local time.
+  // e.g. if it is 3 PM UTC / 11 AM Eastern, localRefDate.toISOString() = "...T11:00:00Z"
+  // Passing this as the chrono reference makes forwardDate comparisons run in local time.
+  const localMs = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour') % 24, get('minute'), get('second'))
+  const localRefDate = new Date(localMs)
   const offsetMinutes = Math.round((localMs - now.getTime()) / 60000)
 
-  const result = chrono.parseDate(text, now, {
-    forwardDate: true,
-    timezone: offsetMinutes,
-  })
-  return result ?? null
+  // Parse with local reference — chrono sees "11 AM" as now, interprets "2:45 PM" as future same-day
+  const parsed = chrono.parseDate(text, localRefDate, { forwardDate: true })
+  if (!parsed) return null
+
+  // parsed.getTime() is in "local-as-UTC" space. Subtract the offset to get real UTC.
+  // e.g. 2:45 PM local-as-UTC − (−240 min) = 6:45 PM UTC = 2:45 PM Eastern ✓
+  return new Date(parsed.getTime() - offsetMinutes * 60000)
 }
 
 // Build a Gather TwiML accepting both speech and DTMF simultaneously
