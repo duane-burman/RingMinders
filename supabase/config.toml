@@ -1,0 +1,59 @@
+[functions.voice-inbound]
+verify_jwt = false
+
+[functions.voice-lookup-number]
+verify_jwt = false
+
+[functions.voice-verify-pin]
+verify_jwt = false
+
+[functions.voice-main-menu]
+verify_jwt = false
+
+[functions.voice-enter-datetime]
+verify_jwt = false
+
+[functions.voice-parse-datetime]
+verify_jwt = false
+
+[functions.voice-confirm-datetime]
+verify_jwt = false
+
+[functions.voice-datetime-confirmed]
+verify_jwt = false
+
+[functions.voice-choose-callback]
+verify_jwt = false
+
+[functions.voice-callback-selected]
+verify_jwt = false
+
+[functions.voice-callback-confirmed]
+verify_jwt = false
+
+[functions.voice-record-message]
+verify_jwt = false
+
+[functions.voice-confirm-reminder]
+verify_jwt = false
+
+[functions.voice-review-upcoming]
+verify_jwt = false
+
+[functions.voice-review-missed]
+verify_jwt = false
+
+[functions.voice-reminder-action]
+verify_jwt = false
+
+[functions.voice-outbound-greeting]
+verify_jwt = false
+
+[functions.voice-outbound-play-message]
+verify_jwt = false
+
+[functions.voice-outbound-status]
+verify_jwt = false
+
+[functions.voice-process-due-reminders]
+verify_jwt = false
