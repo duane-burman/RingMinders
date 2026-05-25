@@ -85,18 +85,34 @@ serve(async (req: Request) => {
   }
 
   // ── DTMF path ─────────────────────────────────────────────────────────────
-  // Must have exactly 4 segments separated by *
+  // Accept 3 parts (month*day*time) or 4 parts (month*day*year*time)
   LOG('dtmf-path', { digits_len: digits.length, parts_count: digits.split('*').length })
   const parts = digits.split('*')
-  if (parts.length !== 4) {
+  if (parts.length !== 3 && parts.length !== 4) {
     LOG('return-2')
     return twimlResponse(redirect(reEntryUrl))
   }
 
-  const [monthStr, dayStr, yearStr, timeStr] = parts
+  const [monthStr, dayStr, yearOrTimeStr, maybetimeStr] = parts
   const month = parseInt(monthStr, 10)
   const day = parseInt(dayStr, 10)
-  const year = parseInt(yearStr, 10)
+
+  let year: number
+  let timeStr: string
+  if (parts.length === 4) {
+    year = parseInt(yearOrTimeStr, 10)
+    timeStr = maybetimeStr
+  } else {
+    // 3-part format: infer year — use current year, bump if date already passed
+    timeStr = yearOrTimeStr
+    const currentYear = new Date().getFullYear()
+    let inferredYear = currentYear
+    const testDate = new Date(Date.UTC(currentYear, month - 1, day))
+    if (testDate < new Date()) {
+      inferredYear = currentYear + 1
+    }
+    year = inferredYear
+  }
 
   // Parse time per PIF rules:
   // 1–2 digits: hour only (5 = 5:00)

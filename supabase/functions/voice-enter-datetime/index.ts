@@ -1,4 +1,4 @@
-// Prompt user to enter date/time via speech or DTMF (month*day*year*time#)
+// Prompt user to enter date/time via speech or DTMF (month*day*time# or month*day*year*time#)
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
   twimlResponse,
@@ -14,9 +14,9 @@ const LOG = (step: string, data?: Record<string, unknown>) =>
 
 const MAIN_PROMPT =
   'Please say the date and time for your reminder — for example, say: June fifteenth at nine thirty a.m. ' +
-  'Or use your keypad: enter the month, then press star, the day, then press star, the four-digit year, then press star, ' +
-  'then the time using up to four digits. For example, for May first, twenty twenty-six at five fifteen, ' +
-  'enter 5 star 1 star 2026 star 515. Then press pound when finished.'
+  'Or use your keypad: enter the month, then press star, the day, then press star, the time, then press pound. ' +
+  'For example, for June fifteenth at two thirty, enter 6 star 15 star 230 pound. ' +
+  'To include a specific year, add it before the time: 6 star 15 star 2027 star 230 pound.'
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: 'That does not appear to be a valid date. Please try again. ',

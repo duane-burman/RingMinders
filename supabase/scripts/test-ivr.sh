@@ -99,11 +99,10 @@ test_function "voice-enter-datetime: prompt" \
   "CallSid=CAtest123" \
   "input=\"dtmf speech\""
 
-# Test 9: voice-parse-datetime — valid input (June 15 2027 at 9:00)
-FUTURE_YEAR=$(date -v+1y +%Y 2>/dev/null || date -d "+1 year" +%Y 2>/dev/null || echo "2027")
-test_function "voice-parse-datetime: valid input" \
+# Test 9: voice-parse-datetime — valid input, 3-part format (June 15 at 2:00, year inferred)
+test_function "voice-parse-datetime: valid input (3-part, year inferred)" \
   "${BASE_URL}/voice-parse-datetime?userId=test&userName=Test&callerNumber=%2B19999999999" \
-  "Digits=6*15*${FUTURE_YEAR}*900&CallSid=CAtest123" \
+  "Digits=6*15*200&CallSid=CAtest123" \
   "voice-confirm-datetime"
 
 # Test 10: voice-parse-datetime — invalid (wrong number of parts)
