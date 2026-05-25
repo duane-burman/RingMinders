@@ -1,10 +1,13 @@
-// Parse DTMF date/time input (month*day*year*time), validate ranges, prompt for AM/PM
+// Parse speech or DTMF date/time input; route to confirmation
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
   twimlResponse,
   gather,
+  parseSpeechDateTime,
+  sayDateTime,
   corsHeaders,
 } from '../_shared/twilio.ts'
+import { supabaseAdmin } from '../_shared/supabase.ts'
 
 const BASE_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1`
 
@@ -33,6 +36,7 @@ serve(async (req: Request) => {
 
   const postParams = new URLSearchParams(body)
   const digits = postParams.get('Digits') ?? ''
+  const speechResult = postParams.get('SpeechResult') ?? ''
 
   const url = new URL(req.url)
   const userId = url.searchParams.get('userId') ?? ''
@@ -41,9 +45,48 @@ serve(async (req: Request) => {
 
   const sessionParams = `userId=${userId}&userName=${encodeURIComponent(userName)}&callerNumber=${encodeURIComponent(callerNumber)}`
   const reEntryUrl = `${BASE_URL}/voice-enter-datetime?${sessionParams}&error=invalid`
+  const speechFailUrl = `${BASE_URL}/voice-enter-datetime?${sessionParams}&error=speech_failed`
 
+  LOG('params', { userId, hasSpeech: !!speechResult, digits_len: digits.length })
+
+  // ── Speech path ───────────────────────────────────────────────────────────
+  if (speechResult) {
+    LOG('speech-path', { speechResult })
+
+    // Fetch user timezone to interpret the spoken time correctly
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('timezone')
+      .eq('id', userId)
+      .single()
+    const timezone = user?.timezone ?? 'America/New_York'
+
+    const parsed = parseSpeechDateTime(speechResult, timezone)
+    if (!parsed) {
+      LOG('return-speech-parse-failed')
+      return twimlResponse(redirect(speechFailUrl))
+    }
+
+    const isoString = parsed.toISOString()
+
+    if (new Date(isoString).getTime() <= Date.now()) {
+      LOG('return-speech-past')
+      return twimlResponse(redirect(`${BASE_URL}/voice-enter-datetime?${sessionParams}&error=past`))
+    }
+
+    const spoken = sayDateTime(isoString, timezone)
+    LOG('return-speech-confirm', { isoString })
+    return twimlResponse(gather({
+      action: `${BASE_URL}/voice-datetime-confirmed?${sessionParams}&scheduledAt=${encodeURIComponent(isoString)}`,
+      numDigits: 1,
+      finishOnKey: '',
+      message: `You said ${spoken}. Press pound to confirm or press star to re-enter.`,
+    }))
+  }
+
+  // ── DTMF path ─────────────────────────────────────────────────────────────
   // Must have exactly 4 segments separated by *
-  LOG('params', { userId, digits_len: digits.length, parts_count: digits.split('*').length })
+  LOG('dtmf-path', { digits_len: digits.length, parts_count: digits.split('*').length })
   const parts = digits.split('*')
   if (parts.length !== 4) {
     LOG('return-2')

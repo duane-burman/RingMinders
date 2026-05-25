@@ -1,6 +1,7 @@
 // Twilio utilities — TwiML builder, signature validation, REST API client
 import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts'
 import { encode } from 'https://deno.land/std@0.168.0/encoding/base64.ts'
+import * as chrono from 'https://esm.sh/chrono-node@2.7.8'
 
 export const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID')!
 export const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN')!
@@ -51,7 +52,7 @@ export function twimlResponse(twiml: string): Response {
 export function sayAndHang(message: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">${message}</Say>
+  <Say voice="Google.en-US-Neural2-F">${message}</Say>
   <Hangup/>
 </Response>`
 }
@@ -75,9 +76,9 @@ export function gather(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" ${numDigits} ${finishOnKey} ${timeout}>
-    <Say voice="alice">${opts.message}</Say>
+    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
   </Gather>
-  <Say voice="alice">We did not receive any input. Goodbye.</Say>
+  <Say voice="Google.en-US-Neural2-F">We did not receive any input. Goodbye.</Say>
   <Hangup/>
 </Response>`
 }
@@ -91,7 +92,7 @@ export function record(opts: {
   const maxLength = opts.maxLength ?? 120
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="alice">${opts.message}</Say>
+  <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
   <Record action="${xmlAttr(opts.action)}" method="POST" maxLength="${maxLength}" finishOnKey="#" playBeep="true"/>
   <Hangup/>
 </Response>`
@@ -107,7 +108,7 @@ export function playAndGather(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" numDigits="${opts.numDigits ?? 1}" timeout="10">
-    <Say voice="alice">${opts.message}</Say>
+    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
     <Play>${opts.playUrl}</Play>
   </Gather>
   <Hangup/>
@@ -177,4 +178,52 @@ export function sayDateTime(isoString: string, timezone: string): string {
     hour12: true
   }).format(date)
   return formatted
+}
+
+// Parse a natural-language date/time from Twilio SpeechResult using chrono-node.
+// The timezone param (e.g. 'America/New_York') is used to interpret ambiguous times
+// in the caller's local time rather than UTC.
+// Returns a Date (UTC) or null if parsing fails.
+export function parseSpeechDateTime(text: string, timezone: string): Date | null {
+  // Compute the UTC offset for this timezone at this moment
+  const now = new Date()
+  const localParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+    hour12: false,
+  }).formatToParts(now)
+  const get = (type: string) => parseInt(localParts.find(p => p.type === type)!.value, 10)
+  const localMs = Date.UTC(
+    get('year'), get('month') - 1, get('day'),
+    get('hour') % 24, get('minute'), get('second')
+  )
+  const offsetMinutes = Math.round((localMs - now.getTime()) / 60000)
+
+  const result = chrono.parseDate(text, now, {
+    forwardDate: true,
+    timezone: offsetMinutes,
+  })
+  return result ?? null
+}
+
+// Build a Gather TwiML accepting both speech and DTMF simultaneously
+export function gatherSpeechAndDtmf(opts: {
+  action: string
+  finishOnKey?: string
+  timeout?: number
+  speechTimeout?: number | 'auto'
+  message: string
+}): string {
+  const finishOnKey = opts.finishOnKey !== undefined ? `finishOnKey="${opts.finishOnKey}"` : ''
+  const timeout = `timeout="${opts.timeout ?? 30}"`
+  const speechTimeout = `speechTimeout="${opts.speechTimeout ?? 'auto'}"`
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="dtmf speech" action="${xmlAttr(opts.action)}" method="POST" ${finishOnKey} ${timeout} ${speechTimeout}>
+    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
+  </Gather>
+  <Say voice="Google.en-US-Neural2-F">We did not receive any input. Goodbye.</Say>
+  <Hangup/>
+</Response>`
 }

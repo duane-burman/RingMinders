@@ -93,11 +93,11 @@ test_function "voice-main-menu: invalid input" \
   "Digits=9&CallSid=CAtest123" \
   "not a valid option"
 
-# Test 8: voice-enter-datetime — prompt
+# Test 8: voice-enter-datetime — prompt (hybrid speech+DTMF gather)
 test_function "voice-enter-datetime: prompt" \
   "${BASE_URL}/voice-enter-datetime?userId=test&userName=Test&callerNumber=%2B19999999999" \
   "CallSid=CAtest123" \
-  "voice-parse-datetime"
+  "input=\"dtmf speech\""
 
 # Test 9: voice-parse-datetime — valid input (June 15 2027 at 9:00)
 FUTURE_YEAR=$(date -v+1y +%Y 2>/dev/null || date -d "+1 year" +%Y 2>/dev/null || echo "2027")
@@ -110,6 +110,18 @@ test_function "voice-parse-datetime: valid input" \
 test_function "voice-parse-datetime: invalid format" \
   "${BASE_URL}/voice-parse-datetime?userId=test&userName=Test&callerNumber=%2B19999999999" \
   "Digits=6*15&CallSid=CAtest123" \
+  "voice-enter-datetime"
+
+# Test 16: voice-parse-datetime — speech path (SpeechResult bypasses AM/PM, goes to voice-datetime-confirmed)
+test_function "voice-parse-datetime: speech path" \
+  "${BASE_URL}/voice-parse-datetime?userId=test&userName=Test&callerNumber=%2B19999999999" \
+  "SpeechResult=June+fifteenth+at+nine+thirty+a.m.&CallSid=CAtest123" \
+  "voice-datetime-confirmed"
+
+# Test 17: voice-parse-datetime — speech path with unparseable input routes back to entry
+test_function "voice-parse-datetime: speech path bad input" \
+  "${BASE_URL}/voice-parse-datetime?userId=test&userName=Test&callerNumber=%2B19999999999" \
+  "SpeechResult=blah+blah+blah&CallSid=CAtest123" \
   "voice-enter-datetime"
 
 # Test 11: voice-datetime-confirmed — pound (confirm)

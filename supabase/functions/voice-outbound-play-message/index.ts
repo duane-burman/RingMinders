@@ -105,9 +105,9 @@ serve(async (req: Request) => {
   return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" numDigits="1" timeout="15" action="${BASE_URL}/voice-outbound-play-message?reminder_id=${reminderId}&amp;played=true" method="POST">
-    <Say voice="alice">Here is your reminder:</Say>
+    <Say voice="Google.en-US-Neural2-F">Here is your reminder:</Say>
     <Play>${playUrl6}</Play>
-    <Say voice="alice">Press 1 to repeat this message. Press 2 to hear the message one more time and then end the call. Or simply hang up when finished.</Say>
+    <Say voice="Google.en-US-Neural2-F">Press 1 to repeat this message. Press 2 to hear the message one more time and then end the call. Or simply hang up when finished.</Say>
   </Gather>
   <Hangup/>
 </Response>`)
