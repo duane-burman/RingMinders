@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.voice-process-due-reminders]
 verify_jwt = false
+
+[functions.voice-recording-proxy]
+verify_jwt = false

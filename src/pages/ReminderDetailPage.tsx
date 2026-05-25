@@ -432,7 +432,11 @@ export function ReminderDetailPage() {
                   {reminder.recording_url && !audioUrl && (
                     <div className="space-y-1">
                       <p className="text-text-muted text-xs">Current recording:</p>
-                      <audio controls src={reminder.recording_url} className="w-full h-10" />
+                      <audio
+                        controls
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-recording-proxy?url=${encodeURIComponent(reminder.recording_url)}`}
+                        className="w-full h-10"
+                      />
                     </div>
                   )}
 
