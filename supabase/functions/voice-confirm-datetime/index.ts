@@ -14,7 +14,6 @@ const BASE_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1`
 const LOG = (step: string, data?: Record<string, unknown>) =>
   console.log(JSON.stringify({ fn: 'voice-confirm-datetime', step, ...(data ? { data } : {}) }))
 
-
 function redirect(url: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -64,7 +63,6 @@ serve(async (req: Request) => {
   LOG('entry', { method: req.method })
 
   if (req.method === 'OPTIONS') {
-    LOG('return-1')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -78,22 +76,44 @@ serve(async (req: Request) => {
   const isValid = true // temporary bypass
 
   const postParams = new URLSearchParams(body)
-  const digits = postParams.get('Digits') ?? ''  // '1' = AM, '2' = PM
+  const digits = postParams.get('Digits') ?? ''
 
   const url = new URL(req.url)
   const userId = url.searchParams.get('userId') ?? ''
   const userName = url.searchParams.get('userName') ?? ''
   const callerNumber = url.searchParams.get('callerNumber') ?? ''
+  const sessionParams = `userId=${userId}&userName=${encodeURIComponent(userName)}&callerNumber=${encodeURIComponent(callerNumber)}`
+
+  // ── Recovery mode: user is responding to "schedule for tomorrow?" prompt ──
+  const recovering = url.searchParams.get('recovering') === '1'
+  const scheduledAtRecovery = url.searchParams.get('scheduledAt') ?? ''
+
+  if (recovering) {
+    LOG('recovery-response', { digits })
+    if (digits === '1') {
+      // User confirmed tomorrow's time — skip to callback selection
+      LOG('return-tomorrow-confirmed')
+      return twimlResponse(redirect(
+        `${BASE_URL}/voice-choose-callback?${sessionParams}&scheduledAt=${encodeURIComponent(scheduledAtRecovery)}`
+      ))
+    }
+    // Any other key — let them re-enter
+    LOG('return-recovery-reenter')
+    return twimlResponse(redirect(
+      `${BASE_URL}/voice-enter-datetime?${sessionParams}`
+    ))
+  }
+
+  // ── Normal mode: digits = AM/PM selection ─────────────────────────────────
   const month = parseInt(url.searchParams.get('month') ?? '0', 10)
   const day = parseInt(url.searchParams.get('day') ?? '0', 10)
   const year = parseInt(url.searchParams.get('year') ?? '0', 10)
   const hour = parseInt(url.searchParams.get('hour') ?? '0', 10)
   const minute = parseInt(url.searchParams.get('minute') ?? '0', 10)
 
-  const sessionParams = `userId=${userId}&userName=${encodeURIComponent(userName)}&callerNumber=${encodeURIComponent(callerNumber)}`
+  LOG('params', { userId, digits, month, day, year, hour, minute })
 
   // Convert to 24-hour time
-  LOG('params', { userId, digits, month, day, year, hour, minute })
   let hour24 = hour
   if (digits === '1') {        // AM
     if (hour === 12) hour24 = 0
@@ -109,21 +129,13 @@ serve(async (req: Request) => {
     testDate.getUTCDate() === day
 
   if (!calendarValid) {
-    LOG('return-2')
+    LOG('return-invalid-date')
     return twimlResponse(redirect(
       `${BASE_URL}/voice-enter-datetime?${sessionParams}&error=invalid`
     ))
   }
 
-  // Validate future date
-  if (testDate.getTime() <= Date.now()) {
-    LOG('return-3')
-    return twimlResponse(redirect(
-      `${BASE_URL}/voice-enter-datetime?${sessionParams}&error=past`
-    ))
-  }
-
-  // Fetch user timezone
+  // Fetch user timezone before past check so we compare correctly
   const { data: user } = await supabaseAdmin
     .from('users')
     .select('timezone')
@@ -133,13 +145,26 @@ serve(async (req: Request) => {
   LOG('db-user', { found: !!user, timezone: user?.timezone ?? null })
   const timezone = user?.timezone ?? 'America/New_York'
 
-  // Build UTC ISO string from local components
+  // Build proper timezone-aware UTC ISO string
   const isoString = toUtcIso(year, month, day, hour24, minute, timezone)
 
-  // Format spoken confirmation
+  // Validate future date using the timezone-corrected time
+  if (new Date(isoString).getTime() <= Date.now()) {
+    // Suggest the same time tomorrow
+    const tomorrowIso = new Date(new Date(isoString).getTime() + 24 * 60 * 60 * 1000).toISOString()
+    const spokenTomorrow = sayDateTime(tomorrowIso, timezone)
+    LOG('return-past-suggest-tomorrow', { tomorrowIso })
+    return twimlResponse(gather({
+      action: `${BASE_URL}/voice-confirm-datetime?${sessionParams}&recovering=1&scheduledAt=${encodeURIComponent(tomorrowIso)}`,
+      numDigits: 1,
+      message: `That time has already passed. The same time tomorrow would be ${spokenTomorrow}. Press 1 to schedule for that time instead, or press 2 to enter a different date and time.`,
+    }))
+  }
+
+  // Valid future time — read back for confirmation
   const spoken = sayDateTime(isoString, timezone)
 
-  LOG('return-4')
+  LOG('return-confirm', { isoString })
   return twimlResponse(gather({
     action: `${BASE_URL}/voice-datetime-confirmed?${sessionParams}&scheduledAt=${encodeURIComponent(isoString)}`,
     numDigits: 1,
