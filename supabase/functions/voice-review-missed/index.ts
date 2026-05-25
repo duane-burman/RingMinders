@@ -78,7 +78,7 @@ serve(async (req: Request) => {
 <Response>
   <Gather input="dtmf" numDigits="1" finishOnKey="" action="${actionUrl}" method="POST" timeout="10">
     <Play>${reminder.recording_url}</Play>
-    <Say voice="Google.en-US-Studio-M">Press pound to mark as heard and return to your reminders. Press star to keep it as unheard.</Say>
+    <Say voice="Google.en-US-Neural2-F">Press pound to mark as heard and return to your reminders. Press star to keep it as unheard.</Say>
   </Gather>
   <Hangup/>
 </Response>`)

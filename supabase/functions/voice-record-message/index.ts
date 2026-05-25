@@ -44,7 +44,7 @@ serve(async (req: Request) => {
   LOG('return-2')
   return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-US-Studio-M">Please leave your reminder message after the tone. Press pound when finished to review your message, or simply hang up to save it immediately.</Say>
+  <Say voice="Google.en-US-Neural2-F">Please leave your reminder message after the tone. Press pound when finished to review your message, or simply hang up to save it immediately.</Say>
   <Record action="${actionUrl}" method="POST" maxLength="120" finishOnKey="#" playBeep="true" recordingStatusCallback="${statusUrl}" recordingStatusCallbackMethod="POST"/>
   <Hangup/>
 </Response>`)
