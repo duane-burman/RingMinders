@@ -71,7 +71,7 @@ serve(async (req: Request) => {
       LOG('return-2')
       return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-US-Neural2-F">This reminder for ${spoken} has been cancelled.</Say>
+  <Say voice="Google.en-US-Studio-M">This reminder for ${spoken} has been cancelled.</Say>
   <Redirect method="POST">${listUrl.replace(/&/g, '&amp;')}</Redirect>
 </Response>`)
     }

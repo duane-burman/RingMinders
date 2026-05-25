@@ -161,7 +161,7 @@ serve(async (req: Request) => {
     LOG('return-4')
     return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-US-Neural2-F">Your reminder has been saved. You will receive a call at ${spokenCallback} on ${spoken}. Press 1 to create another reminder, or hang up to end the call. Thank you for using the Reminder Service.</Say>
+  <Say voice="Google.en-US-Studio-M">Your reminder has been saved. You will receive a call at ${spokenCallback} on ${spoken}. Press 1 to create another reminder, or hang up to end the call. Thank you for using the Reminder Service.</Say>
   <Gather input="dtmf" numDigits="1" action="${BASE_URL}/voice-main-menu?userId=${userId}&amp;userName=${encodeURIComponent(userName)}&amp;callerNumber=${encodeURIComponent(callbackNumber)}" method="POST" timeout="10">
   </Gather>
   <Hangup/>
@@ -186,9 +186,9 @@ serve(async (req: Request) => {
   return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" numDigits="1" finishOnKey="" action="${BASE_URL}/voice-confirm-reminder?userId=${userId}&amp;userName=${encodeURIComponent(userName)}&amp;scheduledAt=${encodeURIComponent(scheduledAt)}&amp;callbackNumber=${encodeURIComponent(callbackNumber)}&amp;recordingUrl=${encodeURIComponent(recordingUrl)}&amp;recordingDuration=${recordingDuration}" method="POST" timeout="15">
-    <Say voice="Google.en-US-Neural2-F">Your reminder is set for ${spoken}. Here is your message:</Say>
+    <Say voice="Google.en-US-Studio-M">Your reminder is set for ${spoken}. Here is your message:</Say>
     <Play>${recordingUrl}</Play>
-    <Say voice="Google.en-US-Neural2-F">Press pound to confirm and save this reminder. Press star to start over.</Say>
+    <Say voice="Google.en-US-Studio-M">Press pound to confirm and save this reminder. Press star to start over.</Say>
   </Gather>
   <Hangup/>
 </Response>`)
