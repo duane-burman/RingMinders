@@ -79,12 +79,12 @@ serve(async (req: Request) => {
   return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" numDigits="1" timeout="10" action="${BASE_URL}/voice-outbound-greeting?reminder_id=${reminderId}" method="POST">
-    <Say voice="Google.en-US-Neural2-F">This is the Reminder Service. Press any key to hear your message.</Say>
+    <Say voice="Google.en-US-Neural2-D">This is the Reminder Service. Press any key to hear your message.</Say>
   </Gather>
   <Pause length="3"/>
-  <Say voice="Google.en-US-Neural2-F">This is a reminder for ${userName}.</Say>
+  <Say voice="Google.en-US-Neural2-D">This is a reminder for ${userName}.</Say>
   <Play>${proxyUrl}</Play>
-  <Say voice="Google.en-US-Neural2-F">This message was sent by the Reminder Service. Goodbye.</Say>
+  <Say voice="Google.en-US-Neural2-D">This message was sent by the Reminder Service. Goodbye.</Say>
   <Hangup/>
 </Response>`)
 })

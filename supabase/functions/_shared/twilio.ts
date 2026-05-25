@@ -52,7 +52,7 @@ export function twimlResponse(twiml: string): Response {
 export function sayAndHang(message: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-US-Neural2-F">${message}</Say>
+  <Say voice="Google.en-US-Neural2-D">${message}</Say>
   <Hangup/>
 </Response>`
 }
@@ -76,9 +76,9 @@ export function gather(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" ${numDigits} ${finishOnKey} ${timeout}>
-    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
+    <Say voice="Google.en-US-Neural2-D">${opts.message}</Say>
   </Gather>
-  <Say voice="Google.en-US-Neural2-F">We did not receive any input. Goodbye.</Say>
+  <Say voice="Google.en-US-Neural2-D">We did not receive any input. Goodbye.</Say>
   <Hangup/>
 </Response>`
 }
@@ -92,7 +92,7 @@ export function record(opts: {
   const maxLength = opts.maxLength ?? 120
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
+  <Say voice="Google.en-US-Neural2-D">${opts.message}</Say>
   <Record action="${xmlAttr(opts.action)}" method="POST" maxLength="${maxLength}" finishOnKey="#" playBeep="true"/>
   <Hangup/>
 </Response>`
@@ -108,7 +108,7 @@ export function playAndGather(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf" action="${xmlAttr(opts.action)}" method="POST" numDigits="${opts.numDigits ?? 1}" timeout="10">
-    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
+    <Say voice="Google.en-US-Neural2-D">${opts.message}</Say>
     <Play>${opts.playUrl}</Play>
   </Gather>
   <Hangup/>
@@ -226,9 +226,9 @@ export function gatherSpeechAndDtmf(opts: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Gather input="dtmf speech" action="${xmlAttr(opts.action)}" method="POST" ${finishOnKey} ${timeout} ${speechTimeout}>
-    <Say voice="Google.en-US-Neural2-F">${opts.message}</Say>
+    <Say voice="Google.en-US-Neural2-D">${opts.message}</Say>
   </Gather>
-  <Say voice="Google.en-US-Neural2-F">We did not receive any input. Goodbye.</Say>
+  <Say voice="Google.en-US-Neural2-D">We did not receive any input. Goodbye.</Say>
   <Hangup/>
 </Response>`
 }
