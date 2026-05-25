@@ -324,9 +324,15 @@ export function ReminderDetailPage() {
 
   const handleConfirmCancel = async () => {
     if (!reminder) return
-    await cancelReminder.mutateAsync(reminder.id)
-    setShowCancelDialog(false)
-    navigate('/reminders')
+    try {
+      await cancelReminder.mutateAsync(reminder.id)
+      toast.success('Reminder cancelled.')
+      setShowCancelDialog(false)
+      navigate('/reminders')
+    } catch (err) {
+      toast.error(`Failed to cancel reminder: ${(err as Error).message}`)
+      setShowCancelDialog(false)
+    }
   }
 
   if (isLoading) {

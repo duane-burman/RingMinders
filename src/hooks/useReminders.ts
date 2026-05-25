@@ -73,7 +73,8 @@ export function useCancelReminder() {
         .eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] }),
+    onError: (error: Error) => console.error('Cancel reminder failed:', error.message)
   })
 }
 

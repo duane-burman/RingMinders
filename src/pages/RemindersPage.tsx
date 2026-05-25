@@ -1,6 +1,7 @@
 // Reminders list — view all reminders across all users
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useReminders, useCancelReminder } from '@/hooks/useReminders'
 import { useUsers } from '@/hooks/useUsers'
 import { StatusBadge } from '@/components/shared/StatusBadge'
@@ -52,7 +53,12 @@ export function RemindersPage() {
 
   const handleConfirmCancel = async () => {
     if (!cancelId) return
-    await cancelReminder.mutateAsync(cancelId)
+    try {
+      await cancelReminder.mutateAsync(cancelId)
+      toast.success('Reminder cancelled.')
+    } catch (err) {
+      toast.error(`Failed to cancel reminder: ${(err as Error).message}`)
+    }
     setCancelId(null)
   }
 
