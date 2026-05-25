@@ -37,7 +37,7 @@ import {
 
 export function RemindersPage() {
   const navigate = useNavigate()
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('pending')
   const [sourceFilter, setSourceFilter] = useState('')
   const [userFilter, setUserFilter] = useState('')
   const [cancelId, setCancelId] = useState<string | null>(null)
