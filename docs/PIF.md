@@ -1108,7 +1108,7 @@ Supabase Free tier includes 500MB database, 1GB storage, 500K Edge Function invo
 
 - Complete inbound IVR Edge Functions: date/time entry, AM/PM, confirmation, callback number selection, message recording, final confirmation
 - Reminder storage in Supabase database
-- pg_cron job: runs every 60 seconds, calls Edge Function via pg_net to process due reminders
+- pg_cron job: runs every 60 seconds, calls Edge Function via pg_net to process due reminders — **DONE** (migration 007_pg_cron_scheduler.sql; job name `process-due-reminders`, schedule `* * * * *`; scheduler_secret stored in settings table)
 - Outbound call Edge Function with human/voicemail detection
 - Retry logic on failed delivery
 - Status tracking through full lifecycle
