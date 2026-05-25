@@ -72,10 +72,11 @@ serve(async (req: Request) => {
         return twimlResponse(redirect(`${BASE_URL}/voice-review-missed?${sessionParams}`))
       }
 
+      const actionUrl = (`${BASE_URL}/voice-reminder-action?${sessionParams}&reminderId=${selectedId}&scheduledAt=${encodeURIComponent(reminder.scheduled_at)}&returnTo=missed`).replace(/&/g, '&amp;')
       LOG('return-4')
       return twimlResponse(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="dtmf" numDigits="1" finishOnKey="" action="${BASE_URL}/voice-reminder-action?${sessionParams}&amp;reminderId=${selectedId}&amp;scheduledAt=${encodeURIComponent(reminder.scheduled_at)}&amp;returnTo=missed" method="POST" timeout="10">
+  <Gather input="dtmf" numDigits="1" finishOnKey="" action="${actionUrl}" method="POST" timeout="10">
     <Play>${reminder.recording_url}</Play>
     <Say voice="Google.en-US-Neural2-F">Press pound to mark as heard and return to your reminders. Press star to keep it as unheard.</Say>
   </Gather>
