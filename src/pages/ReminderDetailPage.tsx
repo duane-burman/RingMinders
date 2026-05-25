@@ -8,7 +8,7 @@ import { reminderUpdateSchema } from '@/lib/validations'
 import type { ReminderUpdateFormData } from '@/lib/validations'
 import { useReminder, useUpdateReminder, useCancelReminder } from '@/hooks/useReminders'
 import { supabase } from '@/lib/supabase'
-import { formatPhone, formatDateTime, formatPhoneInput, toE164, utcToLocal, toUtcIso, ordinal, dateTimeInputClass, cn, getTwilioCompatibleMimeType, getAudioExtension } from '@/lib/utils'
+import { formatPhone, formatDateTime, formatPhoneInput, toE164, utcToLocal, toUtcIso, ordinal, dateTimeInputClass, cn, getTwilioCompatibleMimeType, convertToWav } from '@/lib/utils'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -166,21 +166,33 @@ export function ReminderDetailPage() {
       const chunks: BlobPart[] = []
 
       recorder.ondataavailable = (e) => chunks.push(e.data)
-      recorder.onstop = () => {
-        const actualMime = recorder.mimeType || mimeType || 'audio/webm'
-        const ext = getAudioExtension(actualMime)
-        const fileName = `recording.${ext}`
-        const blob = new Blob(chunks, { type: actualMime })
-        const reader = new FileReader()
-        reader.onload = () => {
-          const base64 = (reader.result as string).split(',')[1]
-          setAudioBase64(base64)
-          setAudioMimeType(actualMime)
-          setAudioFileName(fileName)
-          setAudioDisplayName(fileName)
-        }
-        reader.readAsDataURL(blob)
+      recorder.onstop = async () => {
+        const rawBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
         stream.getTracks().forEach((t) => t.stop())
+
+        try {
+          const wavBlob = await convertToWav(rawBlob)
+          const reader = new FileReader()
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1]
+            setAudioBase64(base64)
+            setAudioMimeType('audio/wav')
+            setAudioFileName('recording.wav')
+            setAudioDisplayName('recording.wav')
+          }
+          reader.readAsDataURL(wavBlob)
+        } catch (err) {
+          console.error('WAV conversion failed, using raw recording:', err)
+          const reader = new FileReader()
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1]
+            setAudioBase64(base64)
+            setAudioMimeType(recorder.mimeType || 'audio/webm')
+            setAudioFileName('recording.webm')
+            setAudioDisplayName('recording.webm')
+          }
+          reader.readAsDataURL(rawBlob)
+        }
       }
 
       mediaRecorderRef.current = recorder

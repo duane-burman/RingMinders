@@ -94,13 +94,15 @@ export function ordinal(n: number): string {
   }
 }
 
-// Returns the best Twilio-compatible MIME type the current browser supports.
-// Preference order: OGG/Opus (Chrome/Firefox, Twilio supports OGG), MP4 (Safari), WAV, browser default.
+// Returns a MIME type the browser can record with. Since we convert everything
+// to WAV before uploading, we just need something the browser supports — preferring
+// formats the Web Audio API decodes most reliably.
 export function getTwilioCompatibleMimeType(): string {
   const candidates = [
-    'audio/ogg;codecs=opus',
+    'audio/webm;codecs=opus',
+    'audio/webm',
     'audio/mp4',
-    'audio/wav',
+    'audio/ogg;codecs=opus',
   ]
   for (const type of candidates) {
     if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) return type
@@ -108,12 +110,77 @@ export function getTwilioCompatibleMimeType(): string {
   return ''
 }
 
-// Returns the file extension that matches a given audio MIME type.
-export function getAudioExtension(mimeType: string): string {
-  if (mimeType.includes('ogg')) return 'ogg'
-  if (mimeType.includes('mp4')) return 'm4a'
-  if (mimeType.includes('wav')) return 'wav'
-  return 'webm'
+// Converts an audio Blob to WAV format using the Web Audio API.
+// WAV (audio/wav) is definitively supported by Twilio's <Play> verb.
+export async function convertToWav(audioBlob: Blob): Promise<Blob> {
+  const arrayBuffer = await audioBlob.arrayBuffer()
+  const audioContext = new AudioContext()
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+
+  const numChannels = 1    // mono — sufficient for voice reminders
+  const sampleRate = 16000 // 16 kHz — good quality for voice, smaller file
+
+  const numSamples = Math.ceil(audioBuffer.duration * sampleRate)
+
+  // Resample to target sample rate using OfflineAudioContext
+  const offlineContext = new OfflineAudioContext(numChannels, numSamples, sampleRate)
+  const source = offlineContext.createBufferSource()
+  source.buffer = audioBuffer
+  source.connect(offlineContext.destination)
+  source.start(0)
+  const renderedBuffer = await offlineContext.startRendering()
+
+  const wavBuffer = encodeWav(renderedBuffer)
+  await audioContext.close()
+  return new Blob([wavBuffer], { type: 'audio/wav' })
+}
+
+function encodeWav(audioBuffer: AudioBuffer): ArrayBuffer {
+  const numChannels = audioBuffer.numberOfChannels
+  const sampleRate = audioBuffer.sampleRate
+  const numSamples = audioBuffer.length
+  const bytesPerSample = 2 // 16-bit PCM
+  const blockAlign = numChannels * bytesPerSample
+  const byteRate = sampleRate * blockAlign
+  const dataSize = numSamples * blockAlign
+  const bufferSize = 44 + dataSize
+
+  const buffer = new ArrayBuffer(bufferSize)
+  const view = new DataView(buffer)
+
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
+  }
+
+  writeString(0, 'RIFF')
+  view.setUint32(4, 36 + dataSize, true)
+  writeString(8, 'WAVE')
+  writeString(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)         // PCM format
+  view.setUint16(22, numChannels, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, byteRate, true)
+  view.setUint16(32, blockAlign, true)
+  view.setUint16(34, bytesPerSample * 8, true)
+  writeString(36, 'data')
+  view.setUint32(40, dataSize, true)
+
+  // Write PCM samples — mix down to mono if source is stereo
+  const channelData: Float32Array[] = []
+  for (let c = 0; c < numChannels; c++) channelData.push(audioBuffer.getChannelData(c))
+
+  let offset = 44
+  for (let i = 0; i < numSamples; i++) {
+    let sample = 0
+    for (let c = 0; c < numChannels; c++) sample += channelData[c][i]
+    sample = sample / numChannels              // average channels
+    sample = Math.max(-1, Math.min(1, sample)) // clamp
+    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+    offset += 2
+  }
+
+  return buffer
 }
 
 // Shared className for native date/time inputs to match shadcn Input styling
