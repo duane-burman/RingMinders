@@ -30,7 +30,6 @@ export function useUpdateSettings() {
         .eq('id', 1)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings'] }),
-    onError: (error: Error) => console.error('Settings update failed:', error.message)
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['settings'] })
   })
 }

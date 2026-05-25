@@ -20,6 +20,11 @@ BEGIN
      WHERE status = 'delivered'
      AND scheduled_at BETWEEN start_date AND end_date),
 
+    'total_success',
+    (SELECT COUNT(*) FROM public.reminders
+     WHERE status IN ('delivered', 'voicemail')
+     AND scheduled_at BETWEEN start_date AND end_date),
+
     'total_voicemail',
     (SELECT COUNT(*) FROM public.reminders
      WHERE status = 'voicemail'

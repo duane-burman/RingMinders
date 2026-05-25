@@ -400,7 +400,6 @@ export function ReminderNewPage() {
               {prefillRecordingUrl && !audioUrl && (
                 <div className="space-y-1">
                   <p className="text-text-muted text-xs">Pre-filled recording (replace below if needed):</p>
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                   <audio controls src={prefillRecordingUrl} className="w-full h-10" />
                 </div>
               )}
@@ -408,7 +407,6 @@ export function ReminderNewPage() {
               {/* New recording playback */}
               {audioUrl && (
                 <div className="mt-3">
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                   <audio controls src={audioUrl} className="w-full h-10" />
                 </div>
               )}

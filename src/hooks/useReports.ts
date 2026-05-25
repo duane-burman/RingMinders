@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 export interface DeliveryReportData {
   total_due: number
   total_delivered: number
+  total_success: number
   total_voicemail: number
   total_missed: number
   avg_attempts: number

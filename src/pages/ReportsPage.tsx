@@ -141,7 +141,7 @@ export function ReportsPage() {
   const userRows = userActivity.data ?? []
 
   const deliveryRate = deliveryData?.total_due
-    ? Math.round((deliveryData.total_delivered / deliveryData.total_due) * 100)
+    ? Math.round((deliveryData.total_success / deliveryData.total_due) * 100)
     : 0
   const status = schedulerStatus(schedulerData?.last_run ?? null)
   const lastRunAgo = formatAgo(secondsAgo(schedulerData?.last_run ?? null))
@@ -209,7 +209,7 @@ export function ReportsPage() {
                   accent={deliveryData.total_missed > 0 ? 'danger' : 'muted'}
                 />
                 <StatCard
-                  label="Delivery Rate"
+                  label="Success Rate"
                   value={`${deliveryRate || 0}%`}
                   icon="ti-chart-bar"
                   accent={deliveryRateAccent(deliveryRate)}

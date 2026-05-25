@@ -8,6 +8,16 @@
 
 @layer base {
   :root {
+    /* RingMinder design token CSS variables — referenced by StatCard and other inline-style consumers */
+    --color-surface: #FFFFFF;
+    --color-border: #E2E6EC;
+    --color-primary: #4ECDC4;
+    --color-text: #1A2B42;
+    --color-text-muted: #6B7A90;
+    --color-success: #3DBE6E;
+    --color-destructive: #E05555;
+    --color-warning: #E8A838;
+    /* shadcn HSL tokens */
     --background: 216 33% 97%;
     --foreground: 213 42% 18%;
     --card: 0 0% 100%;

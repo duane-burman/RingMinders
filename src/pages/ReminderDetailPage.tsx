@@ -432,7 +432,6 @@ export function ReminderDetailPage() {
                   {reminder.recording_url && !audioUrl && (
                     <div className="space-y-1">
                       <p className="text-text-muted text-xs">Current recording:</p>
-                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                       <audio controls src={reminder.recording_url} className="w-full h-10" />
                     </div>
                   )}
@@ -441,7 +440,6 @@ export function ReminderDetailPage() {
                   {audioUrl && (
                     <div className="space-y-1">
                       <p className="text-text-muted text-xs">New recording (will replace current):</p>
-                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                       <audio controls src={audioUrl} className="w-full h-10" />
                     </div>
                   )}
