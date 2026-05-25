@@ -216,6 +216,7 @@ export type Database = {
           id: number
           max_recording_length_seconds: number
           scheduler_concurrency_limit: number
+          scheduler_secret: string | null
           updated_at: string
         }
         Insert: {
@@ -227,6 +228,7 @@ export type Database = {
           id?: number
           max_recording_length_seconds?: number
           scheduler_concurrency_limit?: number
+          scheduler_secret?: string | null
           updated_at?: string
         }
         Update: {
@@ -238,6 +240,7 @@ export type Database = {
           id?: number
           max_recording_length_seconds?: number
           scheduler_concurrency_limit?: number
+          scheduler_secret?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -298,7 +301,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_scheduler_health: { Args: never; Returns: Json }
+      get_dashboard_stats: { Args: never; Returns: Json }
+      get_delivery_report: {
+        Args: { end_date: string; start_date: string }
+        Returns: Json
+      }
+      get_failure_report: {
+        Args: { end_date: string; start_date: string }
+        Returns: Json
+      }
+      get_user_activity_report: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
@@ -431,3 +444,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
